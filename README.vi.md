@@ -34,55 +34,59 @@ Kế nhiệm <a href="https://github.com/aiko-chan-ai/discord.js-selfbot-v13"><c
 
 </div>
 
+**discordjs-selfbot** cho phép đăng nhập Discord bằng **tài khoản người dùng**
+(không phải bot) và tự động hoá tài khoản đó bằng API
+[discord.js](https://github.com/discordjs/discord.js) v14 quen thuộc. Thư viện bổ
+sung những thứ chỉ tài khoản người dùng mới có: bạn bè, group DM, cuộc gọi, rich
+presence, gọi slash command, voice, v.v.
+
 > [!CAUTION]
 > Dùng tài khoản người dùng để tự động hoá là **vi phạm điều khoản dịch vụ của
 > Discord** và có thể dẫn tới khoá tài khoản. Bạn tự chịu rủi ro, nên dùng tài
 > khoản phụ bỏ đi được.
 
+## Tính năng
+
+- **Đăng nhập** bằng token, mã QR, hoặc email và mật khẩu (hỗ trợ 2FA)
+- **REST** giống client chính thức: spoof header, TLS fingerprint, proxy và captcha
+- **Quan hệ**: bạn bè, chặn, lời mời kết bạn, ghi chú
+- **Tài khoản**: phiên đăng nhập, cài đặt, thanh toán
+- **Group DM và cuộc gọi**
+- **Presence**: custom status, rich presence, Spotify RPC
+- **Interaction**: gọi slash command và các interaction khác với tư cách user
+- **Voice, video và Go Live**, có mã hoá đầu-cuối DAVE
+- **WebEmbed** để gửi tin nhắn dạng embed
+- **Lớp tương thích v13** và codemod để chuyển code cũ
+- Có sẵn typings **TypeScript**
+
+Dự án vẫn ở **trước 1.0**: API có thể thay đổi giữa các bản minor, và mọi thay đổi
+phá vỡ tương thích đều được ghi trong [changelog](./CHANGELOG.md).
+
 ## Cài đặt
 
-Cần **Node.js 22.12** trở lên.
+Yêu cầu **Node.js 22.12** trở lên.
 
 ```sh
 npm install @trickstarcandina/discordjs-selfbot
-# hoặc
-pnpm add @trickstarcandina/discordjs-selfbot
-# hoặc
-yarn add @trickstarcandina/discordjs-selfbot
 ```
 
-### Voice (tuỳ chọn)
-
-Voice cần thêm ba thứ, lib không bundle cái nào:
+Voice là tuỳ chọn và cần thêm vài thứ, không gói nào được đóng kèm:
 
 ```sh
-npm install @snazzah/davey      # mã hoá đầu cuối DAVE, Discord bắt buộc
-npm install @discordjs/opus     # hoặc opusscript, để gửi audio
+npm install @snazzah/davey      # mã hoá đầu-cuối DAVE, Discord bắt buộc
+npm install @discordjs/opus     # hoặc opusscript, để gửi âm thanh
 # và ffmpeg trong PATH
 ```
 
-Từ tháng 3/2026 Discord bắt buộc giao thức mã hoá đầu cuối DAVE cho mọi voice
-call không phải stage, và ngắt kết nối với client không nói được nó.
-`@snazzah/davey` là `optionalDependency` để người không đụng voice khỏi phải build
-một native module; thiếu nó thì `joinChannel` ném ra một câu nói rõ tên gói.
-
-### Cài từ GitHub Packages
-
-Mỗi bản release cũng được publish lên GitHub Packages. GitHub đòi token có quyền
-`read:packages` kể cả với gói public:
-
-```ini
-# .npmrc
-@trickstarcandina:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
-```
+Mỗi bản release cũng được publish lên
+[GitHub Packages](https://github.com/trickstarcandina/discordjs-selfbot/pkgs/npm/discordjs-selfbot).
 
 ## Bắt đầu nhanh
 
 ```js
 const { Client } = require('@trickstarcandina/discordjs-selfbot');
 
-const client = new Client({}); // không cần intents
+const client = new Client(); // tài khoản người dùng không dùng intents
 
 client.on('ready', () => {
   console.log(`Đăng nhập với ${client.user.tag}`);
@@ -92,152 +96,43 @@ client.on('ready', () => {
 client.login(process.env.DISCORD_TOKEN);
 ```
 
-Muốn kiểm tra lib bằng token của bạn, chép [`.env.example`](./.env.example) thành
-`.env` rồi chạy:
-
-```sh
-node --env-file=.env scripts/smoke/readonly.mjs
-```
-
-Mỗi lần chạy tốn một identify nên phải giãn các lần chạy ra. Xem
-[`scripts/smoke/README.vi.md`](./scripts/smoke/README.vi.md).
-
-## Tính năng
-
-| Phần                                                   | Trạng thái                         |
-| ------------------------------------------------------ | ---------------------------------- |
-| REST (spoof header, TLS fingerprint, proxy, captcha)   | ✅ Xong                            |
-| Gateway (identify cho tài khoản người dùng)            | ✅ Xong                            |
-| Quan hệ, phiên đăng nhập, ghi chú, cài đặt, thanh toán | ✅ Xong                            |
-| Group DM, cuộc gọi                                     | ✅ Xong                            |
-| Custom status, rich presence, Spotify RPC              | ✅ Xong                            |
-| WebEmbed                                               | ✅ Xong                            |
-| Gửi interaction với tư cách user                       | ✅ Xong                            |
-| Đăng nhập QR, đăng nhập mật khẩu (kèm 2FA)             | ✅ Xong                            |
-| Lớp tương thích v13 + codemod                          | ✅ Xong                            |
-| Kiểu TypeScript                                        | ✅ Xong                            |
-| Voice / video / Go Live                                | ⚠️ Chạy được, cần `@snazzah/davey` |
-
-Dự án đang ở **giai đoạn trước 1.0**: API còn có thể đổi giữa các bản minor, và
-mọi thay đổi phá tương thích đều ghi trong [changelog](./CHANGELOG.md).
-
-> [!IMPORTANT]
-> Phần đăng nhập và các đường chỉ đọc đã chạy thật với token thật (xem
-> [`scripts/smoke/results.md`](./scripts/smoke/results.md)). Ngoài phạm vi đó,
-> mọi thứ vẫn chỉ có unit test không chạm mạng. Các hằng số như
-> `client_build_number`, `capabilities`, `SpotifyRPC.flags` và phần lớn route
-> trong `src/util/UserRoutes.js` đều lấy từ bản v13 và **chưa được xác minh**
-> với Discord hiện tại.
-
-> [!WARNING]
-> Voice vào được kênh thật và pass toàn bộ smoke suite: vào kênh, phát, mở stream
-> nhận, mở kết nối Go Live, rời kênh. Còn hai chỗ chưa chứng minh: chưa ai nghe
-> bằng tai, và ở một mình trong kênh thì nhóm DAVE không tới epoch nên chính đường
-> mã hoá đầu cuối chưa từng chạy với Discord. Video và Go Live thì không được mã
-> hoá đầu cuối.
-
-## Thông tin gói
-
-| Mục                     | Chi tiết                                                                                                                                                                                                                                   |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Registry**            | [npmjs.com](https://www.npmjs.com/package/@trickstarcandina/discordjs-selfbot) (chính), [GitHub Packages](https://github.com/trickstarcandina/discordjs-selfbot/pkgs/npm/discordjs-selfbot) (bản sao)                                      |
-| **Thống kê lượt tải**   | Biểu đồ theo ngày, tuần, tháng trên [npm-stat](https://npm-stat.com/charts.html?package=%40trickstarcandina%2Fdiscordjs-selfbot)                                                                                                           |
-| **Ghi chú phát hành**   | [`CHANGELOG.md`](./CHANGELOG.md) và [GitHub Releases](https://github.com/trickstarcandina/discordjs-selfbot/releases)                                                                                                                      |
-| **Định dạng module**    | CommonJS, kèm kiểu TypeScript trong [`typings/`](./typings)                                                                                                                                                                                |
-| **Nguồn gốc bản build** | Mỗi bản release do [GitHub Actions](./.github/workflows/publish.yml) build và publish qua npm Trusted Publishing, không có token lưu sẵn. npm gắn mỗi version với commit đã build ra nó; kiểm tra bản bạn cài bằng `npm audit signatures`. |
+Các script chạy được khác (đăng nhập bằng QR và mật khẩu, rich presence, slash
+command, group DM, WebEmbed, proxy và voice) nằm trong [`examples/`](./examples).
 
 ## Tài liệu
 
-| Ở đâu                                    | Nội dung                                                                          |
-| ---------------------------------------- | --------------------------------------------------------------------------------- |
-| [`docs/API.vi.md`](./docs/API.vi.md)     | Toàn bộ phần fork thêm vào, theo nhóm, kèm trạng thái tested/unit/ported từng mục |
-| [`MIGRATION.vi.md`](./MIGRATION.vi.md)   | Chuyển code từ `discord.js-selfbot-v13`, và codemod                               |
-| [`UPSTREAM.vi.md`](./UPSTREAM.vi.md)     | File upstream nào bị sửa, vì sao, và cách nâng cấp                                |
-| [`SECURITY.vi.md`](./SECURITY.vi.md)     | Báo lỗ hổng, lệnh audit, checklist trước khi release                              |
-| [`examples/`](./examples)                | 9 script chạy được                                                                |
-| [`scripts/smoke/`](./scripts/smoke)      | Kiểm tra bằng token thật, và log các lần chạy trước                               |
-| [discord.js.dev](https://discord.js.dev) | Mọi thứ không thuộc selfbot, giữ nguyên từ upstream                               |
+| Tài liệu                                      | Nội dung                                       |
+| --------------------------------------------- | ---------------------------------------------- |
+| [Tham chiếu API](./docs/API.vi.md)            | Mọi thứ fork này thêm vào so với discord.js    |
+| [Hướng dẫn chuyển đổi](./MIGRATION.vi.md)     | Chuyển từ `discord.js-selfbot-v13`, và codemod |
+| [Changelog](./CHANGELOG.md)                   | Ghi chú phát hành                              |
+| [Tài liệu discord.js](https://discord.js.org) | Mọi thứ giữ nguyên từ upstream                 |
 
-## Ví dụ
-
-Thư mục [`examples/`](./examples) có 9 script chạy được: đăng nhập bằng token,
-QR và mật khẩu; rich presence; gọi slash command; group DM và cuộc gọi;
-WebEmbed; proxy; voice. Chúng dùng ID placeholder, hãy điền ID của bạn trước khi
-chạy.
-
-## Chuyển từ v13
-
-Lớp tương thích bật mặc định nên phần lớn code cũ chạy ngay. Phần phải sửa và
-codemod hỗ trợ đều ghi trong [`MIGRATION.vi.md`](./MIGRATION.vi.md).
-
-## Quan hệ với upstream
-
-Repo này là bản chép của `packages/discord.js/{src,typings}` tại một commit đã
-ghim, cộng thêm phần dành cho tài khoản người dùng.
-
-[`UPSTREAM.vi.md`](./UPSTREAM.vi.md) ghi commit đang bám và **bảng đầy đủ các
-file upstream đã bị sửa kèm lý do**. Giữ bảng đó ngắn là tiêu chí thiết kế: mỗi
-file lệch thêm là một chỗ phải xử lý tay ở lần nâng cấp sau.
-
-Nâng cấp là một lần merge, không phải vá lại từ đầu. Nhánh `upstream-vendor` giữ
-mã gốc chưa patch và đóng vai merge base:
+## Đóng góp
 
 ```sh
-cd ../discord.js && git fetch          # lấy code mới của discord.js
-./scripts/sync-upstream.sh origin/v14  # ghi commit lên upstream-vendor
-git merge upstream-vendor              # git tự áp lại patch selfbot
-npm test
+git clone https://github.com/trickstarcandina/discordjs-selfbot.git
+cd discordjs-selfbot
+npm install
+npm test        # unit test + kiểm tra TypeScript
+npm run lint
 ```
 
-## Phát triển
-
-```sh
-npm run lint              # eslint + prettier
-node --test               # unit test
-npm run test:typescript   # tsc + tsd
-npm test                  # cả ba
-npm run security          # npm audit + test bảo mật + soi nội dung gói
-```
-
-Git hook chạy sẵn qua husky, chia theo tốc độ:
-
-| Hook         | Chạy gì                                          | Mất  |
-| ------------ | ------------------------------------------------ | ---- |
-| `pre-commit` | lint-staged (chỉ file đang staged) + unit test   | ~3s  |
-| `pre-push`   | lint cả repo + unit test + `tsc` và hai bộ `tsd` | ~25s |
-
-Hook là cổng kiểm tra hằng ngày: không có CI khi push, nên `--no-verify` bỏ qua
-được hết. GitHub Actions chỉ chạy ở ba chỗ:
-
-- **`publish`**, mỗi lần tạo GitHub release: lint, test, kiểm kiểu, `npm audit`,
-  chữ ký registry và soi nội dung tarball, rồi mới publish.
-- **`security`**, hằng tuần và khi chạy tay: `npm audit`, chữ ký, test bảo mật và
-  CodeQL.
-- **`stats`**, hằng ngày: vẽ lại biểu đồ lượt tải ở cuối trang này và đẩy lên
-  nhánh `stats`. Đây là workflow duy nhất có quyền ghi vào repo.
-
-Quy ước: code dành cho tài khoản người dùng đi vào **file mới**. Sửa file
-upstream là phương án cuối, và phải ghi vào bảng trong `UPSTREAM.vi.md`.
+Code dành cho tài khoản người dùng đặt trong **file mới**. Sửa file kế thừa từ
+discord.js là lựa chọn cuối cùng và phải được ghi vào [`UPSTREAM.vi.md`](./UPSTREAM.vi.md),
+nơi cũng giải thích cách merge các bản phát hành upstream. Để kiểm tra thay đổi với
+tài khoản thật, xem [`scripts/smoke/`](./scripts/smoke/README.vi.md).
 
 ## Bảo mật
 
-Hãy báo lỗ hổng một cách riêng tư; xem [`SECURITY.vi.md`](./SECURITY.vi.md) để
-biết cách báo, và danh sách các lỗi đã sửa.
+Vui lòng báo cáo lỗ hổng một cách riêng tư theo hướng dẫn trong
+[`SECURITY.vi.md`](./SECURITY.vi.md).
 
 ## Giấy phép
 
-GPL-3.0-or-later. Xem [`LICENSE`](./LICENSE).
-
-Đây là giấy phép copyleft: phần mềm bạn viết dựa trên thư viện này, nếu đem phân
-phối, cũng phải phát hành theo GPL-3.0 kèm mã nguồn.
-
-Sở dĩ là GPL chứ không phải Apache vì phần voice stack cho tài khoản người dùng
-nằm dưới `src/client/voice/` được port từ
-[discord.js-selfbot-v13](https://github.com/aiko-chan-ai/discord.js-selfbot-v13),
-vốn là GPL-3.0. Phần kế thừa từ
-[discord.js](https://github.com/discordjs/discord.js) vẫn đến tay bạn kèm giấy
-phép Apache-2.0, toàn văn nằm ở [`LICENSE-APACHE`](./LICENSE-APACHE).
-[`NOTICE`](./NOTICE) ghi rõ phần ghi công cho cả hai upstream.
+[GPL-3.0-or-later](./LICENSE). Phần voice được port từ `discord.js-selfbot-v13`
+(GPL-3.0); code kế thừa từ discord.js vẫn dùng được theo
+[Apache-2.0](./LICENSE-APACHE). Xem [`NOTICE`](./NOTICE) để biết chi tiết ghi công.
 
 ## Thống kê
 
