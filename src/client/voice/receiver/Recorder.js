@@ -36,6 +36,20 @@ function findOwnFFmpeg(list, ffmpegPid) {
 }
 
 /**
+ * Cờ ghi đè truyền cho ffmpeg.
+ *
+ * Output là stream thì ffmpeg ghi vào socket mà chính Recorder vừa mở. Trên Windows
+ * đó là named pipe `\\.\pipe\...`, ffmpeg coi như file thường và thấy nó đã tồn
+ * tại, nên `-n` sẽ làm ffmpeg thoát ngay. Chỉ đường dẫn file mới cần chặn ghi đè.
+ * @param {boolean} isStream Output có phải stream không
+ * @param {boolean} overwrite Người dùng cho phép ghi đè
+ * @returns {string}
+ */
+function overwriteFlag(isStream, overwrite) {
+  return isStream || overwrite ? '-y' : '-n';
+}
+
+/**
  * Represents a FFmpeg handler
  * @extends {EventEmitter}
  */
@@ -132,7 +146,7 @@ class Recorder extends EventEmitter {
       '4M',
       '-c',
       'copy',
-      this.overwrite ? '-y' : '-n',
+      overwriteFlag(isStream, this.overwrite),
       '-f',
       'matroska',
       isStream ? this.outputStream.url : output,
@@ -206,3 +220,4 @@ class Recorder extends EventEmitter {
 
 module.exports = Recorder;
 module.exports.findOwnFFmpeg = findOwnFFmpeg;
+module.exports.overwriteFlag = overwriteFlag;

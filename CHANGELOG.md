@@ -3,12 +3,22 @@
 Every entry below was found by running the library against a real Discord account,
 not by reading code. Where a claim is not proven, it says so.
 
-## Unreleased
+## 0.3.0
+
+A security release. Three of the fixes change behaviour that code may rely on, so
+read **Breaking** before upgrading.
 
 ### Breaking
 
 - Node.js 22.12 or newer is required. Node 20 reached end of life on 2026-04-30
   and no longer gets security fixes.
+- `receiver.createVideoStream(user, path)` throws when `path` already exists,
+  instead of overwriting it. Pass `{ overwrite: true }` as the third argument for
+  the old behaviour. A stream output is unaffected.
+- `authorizeURL` only copies OAuth2 parameters from the URL into the body. Send
+  anything else through `options`.
+- `authorization` in `client.options.http.headers` is ignored; the token only
+  comes from `login()`.
 
 ### Security
 
@@ -21,16 +31,20 @@ not by reading code. Where a claim is not proven, it says so.
   `connect(client)` rejects instead of hanging when `client.login` fails.
 - `Recorder.destroy` only kills the ffmpeg process it spawned.
 - `uploadToSlot` refuses non-`https` upload URLs.
-- `receiver.createVideoStream(user, path)` throws when `path` already exists,
-  instead of overwriting it. Pass `{ overwrite: true }` as the third argument for
-  the old behaviour.
-- `authorizeURL` only copies OAuth2 parameters from the URL into the body. Send
-  anything else through `options`.
-- `authorization` in `client.options.http.headers` is ignored; the token only
-  comes from `login()`.
+- The three **Breaking** changes above: a recording no longer silently replaces a
+  file, an OAuth2 link can no longer smuggle extra fields into the body, and
+  options built from outside data can no longer send requests with another token.
 - GitHub Actions are pinned by commit SHA.
 - Releases now also run `npm audit`, `npm audit signatures` and a check of the
   tarball contents before publishing; a weekly workflow runs the audits and CodeQL.
+
+### Changed
+
+- `discord-api-types` raised to `^0.38.57` and `ws` to `^8.22.0`.
+- The npm package no longer ships the `typings/*.test-d.ts` type tests.
+
+**Not proven:** every change above is covered by unit tests, but none has yet
+been run against a real account.
 
 ## 0.2.1
 

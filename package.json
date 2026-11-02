@@ -1,6 +1,6 @@
 {
   "name": "@trickstarcandina/discordjs-selfbot",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "discord.js v14 for Discord user accounts: relationships, group DMs, rich presence, and voice with DAVE end-to-end encryption",
   "keywords": [
     "discord.js",

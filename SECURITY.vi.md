@@ -32,7 +32,8 @@ dõi sẽ trượt ở đây.
 
 **Mỗi tuần** — `.github/workflows/security.yml` chạy audit, kiểm chữ ký và CodeQL
 (`security-and-quality`, config ở `.github/codeql/`). Dependabot mở PR cho gói npm
-và GitHub Actions. Lỗ hổng mới công bố cho một dependency hiện ra ở đây kể cả khi
+và GitHub Actions. `stats.yml` chạy hằng ngày là workflow duy nhất có quyền ghi:
+nó không chạy `npm ci` và chỉ đẩy nhánh `stats`. Lỗ hổng mới công bố cho một dependency hiện ra ở đây kể cả khi
 code của ta không đổi dòng nào.
 
 **Mỗi release** — `publish.yml` từ chối publish trừ khi qua hết, theo thứ tự: tag

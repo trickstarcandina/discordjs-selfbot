@@ -1,0 +1,56 @@
+# Ve lai bieu do luot tai npm cho README moi ngay.
+#
+# Anh nam o nhanh `stats` (mot commit duy nhat, ghi de moi lan), khong phai `main`:
+# khong lam ban lich su main bang commit tu dong, va khong vuong branch protection.
+# README nhung anh tu raw.githubusercontent.com/<repo>/stats/.
+#
+# Day la job duy nhat co quyen ghi repo, nen no khong chay `npm ci`: script khong
+# dung dependency nao va chi doc registry.npmjs.org, api.npmjs.org.
+name: stats
+
+on:
+  schedule:
+    # Moi ngay 04:37 UTC; npm cap nhat so lieu ngay hom truoc vao luc rang sang UTC.
+    - cron: '37 4 * * *'
+  # Chay ngay khi workflow hay script ve vao main, de lan merge dau tien tao luon
+  # nhanh `stats` thay vi de README hien anh hong toi lich chay ke tiep.
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/stats.yml
+      - scripts/download-chart.mjs
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  downloads-chart:
+    runs-on: ubuntu-latest
+    permissions:
+      # Day nhanh `stats`.
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Token chi dua vao dung buoc push ben duoi, khong nam trong .git/config.
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+
+      - run: node scripts/download-chart.mjs stats-out
+
+      - name: day len nhanh stats
+        working-directory: stats-out
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          git init -q -b stats
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .
+          git commit -q -m "stats: $(date -u +%F)"
+          git push -q --force "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" stats

@@ -32,7 +32,8 @@ file fails here.
 
 **Every week** — `.github/workflows/security.yml` runs the audits, the signature
 check and CodeQL (`security-and-quality`, config in `.github/codeql/`). Dependabot
-opens PRs for npm packages and GitHub Actions. A new advisory against a dependency
+opens PRs for npm packages and GitHub Actions. The daily `stats.yml` is the only
+workflow with write access: it runs no `npm ci` and only pushes the `stats` branch. A new advisory against a dependency
 shows up here even when no line of our code changed.
 
 **Every release** — `publish.yml` refuses to publish unless, in this order: tag

@@ -11,7 +11,7 @@ const { join } = require('node:path');
 const { test } = require('node:test');
 const Client = require('../src/client/Client.js');
 const Recorder = require('../src/client/voice/receiver/Recorder.js');
-const { findOwnFFmpeg } = Recorder;
+const { findOwnFFmpeg, overwriteFlag } = Recorder;
 const { uploadToSlot } = require('../src/util/AttachmentUpload.js');
 const { RemoteAuth } = require('../src/util/RemoteAuth.js');
 const { UserRoutes, segment } = require('../src/util/UserRoutes.js');
@@ -190,6 +190,13 @@ test('findOwnFFmpeg chi khop pid/ppid, khong khop theo dong lenh', () => {
 test('Recorder khong ghi de file da co neu khong duoc phep', () => {
   // Ném trước khi mở socket hay spawn ffmpeg, nên test không cần ffmpeg.
   assert.throws(() => new Recorder(null, { output: __filename, portUdpH264: 1, portUdpOpus: 2 }), /already exists/);
+});
+
+test('ffmpeg chi bi cam ghi de khi output la file', () => {
+  assert.strictEqual(overwriteFlag(false, false), '-n');
+  assert.strictEqual(overwriteFlag(false, true), '-y');
+  // Stream ghi qua socket ma Recorder vua mo; tren Windows `-n` lam ffmpeg thoat ngay.
+  assert.strictEqual(overwriteFlag(true, false), '-y');
 });
 
 test('_censoredToken giau phan bi mat cua token', () => {
