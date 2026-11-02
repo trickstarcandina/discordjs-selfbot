@@ -3,7 +3,7 @@
 Every entry below was found by running the library against a real Discord account,
 not by reading code. Where a claim is not proven, it says so.
 
-## Unreleased
+## 0.4.0
 
 Rebased on discord.js `14.28.0` (upstream `88ff1bda5`). Git merged every file on
 its own; no selfbot patch needed rework.
