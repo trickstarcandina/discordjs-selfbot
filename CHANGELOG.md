@@ -3,6 +3,33 @@
 Every entry below was found by running the library against a real Discord account,
 not by reading code. Where a claim is not proven, it says so.
 
+## Unreleased
+
+Rebased on discord.js `14.28.0` (upstream `88ff1bda5`). Git merged every file on
+its own; no selfbot patch needed rework.
+
+### Added (from upstream)
+
+- Invites carry roles: `invite.roles` holds the roles a member gets on joining.
+  For a guild the account is not in it holds `InviteRole`s, otherwise the
+  guild's `Role`s. Friend invites have no roles, so it stays `null` there.
+- `guild.invites.create(channel, { roles, targetUsersFile })` creates an invite
+  that grants roles and that only the listed users can accept.
+- `fetchTargetUsers`, `updateTargetUsers` and `fetchTargetUsersJobStatus`, on
+  both `Invite` and `GuildInviteManager`.
+- New exports `BaseRole` (now the parent of `Role`) and `InviteRole`.
+- `channel.permissions` / `appPermissions` and file types on attachment command
+  options, the other two highlights of 14.28.0, were already in the base we
+  forked from.
+
+### Changed
+
+- `@discordjs/builders` raised to `^1.15.0`, `@discordjs/formatters` to
+  `^0.6.2` and `@discordjs/util` to `^1.2.0`, matching discord.js 14.28.0.
+
+**Not proven:** the new invite features are covered by unit tests against the
+REST shapes, but have not yet been run against a real account.
+
 ## 0.3.0
 
 A security release. Three of the fixes change behaviour that code may rely on, so

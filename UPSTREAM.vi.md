@@ -6,8 +6,8 @@
 | ------------- | ------------------------------------------ |
 | Repo          | https://github.com/discordjs/discord.js    |
 | Branch        | `v14`                                      |
-| Commit        | `8047fe7c55d99ed01dfe82b4a260be45081baf26` |
-| Version       | `14.27.0`                                  |
+| Commit        | `88ff1bda586b146cb2c799c58c4534657b1a3255` |
+| Version       | `14.28.0`                                  |
 | Đường dẫn lấy | `packages/discord.js/{src,typings}`        |
 
 ## Nâng cấp

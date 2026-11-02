@@ -5,7 +5,7 @@
 <h1>discordjs-selfbot</h1>
 
 <p><strong>discord.js v14 for user accounts.</strong><br>
-A successor to the archived <a href="https://github.com/aiko-chan-ai/discord.js-selfbot-v13"><code>discord.js-selfbot-v13</code></a>, built on <a href="https://github.com/discordjs/discord.js">discord.js</a> <code>v14.27.0</code>.</p>
+A successor to the archived <a href="https://github.com/aiko-chan-ai/discord.js-selfbot-v13"><code>discord.js-selfbot-v13</code></a>, built on <a href="https://github.com/discordjs/discord.js">discord.js</a> <code>v14.28.0</code>.</p>
 
 <p>
 <a href="https://www.npmjs.com/package/@trickstarcandina/discordjs-selfbot"><img alt="npm version" src="https://img.shields.io/npm/v/@trickstarcandina/discordjs-selfbot?logo=npm&color=cb3837"></a>
@@ -16,7 +16,7 @@ A successor to the archived <a href="https://github.com/aiko-chan-ai/discord.js-
 </p>
 
 <p>
-<a href="https://github.com/discordjs/discord.js/tree/14.27.0"><img alt="Based on discord.js v14.27.0" src="https://img.shields.io/badge/discord.js-v14.27.0-5865F2?logo=discord&logoColor=white"></a>
+<a href="https://github.com/discordjs/discord.js/tree/14.28.0"><img alt="Based on discord.js v14.28.0" src="https://img.shields.io/badge/discord.js-v14.28.0-5865F2?logo=discord&logoColor=white"></a>
 <a href="./package.json"><img alt="Node.js version" src="https://img.shields.io/node/v/@trickstarcandina/discordjs-selfbot?logo=node.js&logoColor=white&color=339933"></a>
 <a href="https://github.com/trickstarcandina/discordjs-selfbot/actions/workflows/publish.yml"><img alt="Publish workflow" src="https://img.shields.io/github/actions/workflow/status/trickstarcandina/discordjs-selfbot/publish.yml?label=publish&logo=githubactions&logoColor=white"></a>
 <a href="https://github.com/trickstarcandina/discordjs-selfbot/actions/workflows/security.yml"><img alt="Security workflow" src="https://img.shields.io/github/actions/workflow/status/trickstarcandina/discordjs-selfbot/security.yml?label=security&logo=githubactions&logoColor=white"></a>
