@@ -26,7 +26,8 @@ if [ ! -d "$UPSTREAM_REPO/.git" ]; then
 fi
 
 if ! git rev-parse --verify --quiet "$VENDOR_BRANCH" >/dev/null; then
-  echo "Khong co nhanh $VENDOR_BRANCH. No la merge base, khong tao lai duoc bang script nay." >&2
+  echo "Khong co nhanh $VENDOR_BRANCH o local. No la merge base, khong tao lai duoc bang script nay." >&2
+  echo "Clone chi lay main; lay nhanh ve truoc: git fetch origin $VENDOR_BRANCH:$VENDOR_BRANCH" >&2
   exit 1
 fi
 
