@@ -27,8 +27,33 @@ its own; no selfbot patch needed rework.
 - `@discordjs/builders` raised to `^1.15.0`, `@discordjs/formatters` to
   `^0.6.2` and `@discordjs/util` to `^1.2.0`, matching discord.js 14.28.0.
 
-**Not proven:** the new invite features are covered by unit tests against the
-REST shapes, but have not yet been run against a real account.
+### Fixed (voice)
+
+- A voice packet that fails to decrypt no longer kills the process. The
+  decryption libraries throw on a bad auth tag, and that happens with legitimate
+  traffic whenever Discord rotates the key while packets encrypted with the old
+  one are still in flight; the throw happened inside the UDP socket's `message`
+  listener, where nothing catches it. Such packets are now dropped, as are
+  packets shorter than one RTP frame. A wrong IP-discovery reply is reported
+  through `error` instead of thrown from the same place.
+- `SpeakingBitField` flags were read by their v13 names (`FLAGS.SPEAKING`),
+  which are `undefined` in v14. In `PacketHandler` that was another crash on the
+  first packet from a user with no speaking state; in `VoiceConnection` every
+  SPEAKING event became an `error`, so streams created with `end: 'silence'`
+  never ended.
+
+### Security
+
+- The voice `debug` output no longer contains the voice token, the session id
+  or `secret_key`. They appeared in plain text in the token/session lines, in
+  the "Ready with authentication details" dump and in the raw `[WS] >>` /
+  `[WS] <<` packet logs (IDENTIFY and SESSION_DESCRIPTION). Anyone who wrote
+  `client.on('debug')` to a file or pasted it into an issue was handing out the
+  keys to that voice session. The values are replaced with `[redacted]`; the
+  packets sent on the wire are unchanged.
+
+**Not proven:** the new invite features and the voice fixes are covered by unit
+tests, but have not yet been run against a real account.
 
 ## 0.3.0
 

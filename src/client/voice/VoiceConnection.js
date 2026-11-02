@@ -13,6 +13,7 @@ const VoiceReceiver = require('./receiver/Receiver');
 const { parseStreamKey } = require('./util/Function');
 const { mergeDefault } = require('./util/MergeDefault');
 const PlayInterface = require('./util/PlayInterface');
+const { REDACTED, stringifyRedacted } = require('./util/Redact');
 const Silence = require('./util/Silence');
 const { Opcodes, VoiceOpcodes, VoiceStatus } = require('./util/VoiceConstants');
 const Events = require('../../util/Events');
@@ -348,7 +349,7 @@ class VoiceConnection extends EventEmitter {
    * @private
    */
   setTokenAndEndpoint(token, endpoint) {
-    this.emit('debug', `Token "${token}" and endpoint "${endpoint}"`);
+    this.emit('debug', `Token ${token ? REDACTED : '(none)'} and endpoint "${endpoint}"`);
     if (!endpoint) {
       // Signifies awaiting endpoint stage
       return;
@@ -387,7 +388,10 @@ class VoiceConnection extends EventEmitter {
    * @private
    */
   setSessionId(sessionId) {
-    this.emit('debug', `Setting sessionId ${sessionId} (stored as "${this.authentication.sessionId}")`);
+    this.emit(
+      'debug',
+      `Setting sessionId ${sessionId ? REDACTED : '(none)'} (stored: ${this.authentication.sessionId ? 'yes' : 'no'})`,
+    );
     if (!sessionId) {
       this.authenticateFailed('VOICE_SESSION_ABSENT');
       return;
@@ -413,7 +417,7 @@ class VoiceConnection extends EventEmitter {
    */
   checkAuthenticated() {
     const { token, endpoint, sessionId } = this.authentication;
-    this.emit('debug', `Authenticated with sessionId ${sessionId}`);
+    this.emit('debug', `Authenticated with sessionId ${sessionId ? REDACTED : '(none)'}`);
     if (token && endpoint && sessionId) {
       this.status = VoiceStatus.CONNECTING;
       /**
@@ -616,7 +620,7 @@ class VoiceConnection extends EventEmitter {
     this.status = VoiceStatus.CONNECTED;
     const ready = () => {
       clearTimeout(this.connectTimeout);
-      this.emit('debug', `Ready with authentication details: ${JSON.stringify(this.authentication)}`);
+      this.emit('debug', `Ready with authentication details: ${stringifyRedacted(this.authentication)}`);
       /**
        * Emitted once the connection is ready, when a promise to join a voice channel resolves,
        * the connection will already be ready.
@@ -782,7 +786,7 @@ class VoiceConnection extends EventEmitter {
      */
     if (this.status === VoiceStatus.CONNECTED) {
       this.emit('speaking', user, speaking);
-      if (!speaking.has(Speaking.FLAGS.SPEAKING)) {
+      if (!speaking.has(Speaking.Flags.Speaking)) {
         this.receiver.packets._stoppedSpeaking(user_id);
       }
     }

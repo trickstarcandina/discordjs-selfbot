@@ -103,8 +103,11 @@ class VoiceConnectionUDPClient extends EventEmitter {
     this.emit('debug', `[UDP] created socket`);
     socket.once('message', message => {
       this.emit('debug', `[UDP] message: [${[...message]}] (${message})`);
-      if (message.readUInt16BE(0) !== 2) {
-        throw new Error('UDP_WRONG_HANDSHAKE');
+      // Ném ở đây là uncaught exception: listener `message` của dgram không có ai
+      // bắt. Báo qua `error` như mọi lỗi khác của socket.
+      if (message.length < 2 || message.readUInt16BE(0) !== 2) {
+        this.emit('error', new Error('UDP_WRONG_HANDSHAKE'));
+        return;
       }
       // Stop if the sockets have been deleted because the connection has been closed already
       if (!this.voiceConnection.sockets.ws) return;
