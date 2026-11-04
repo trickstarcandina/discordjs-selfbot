@@ -89,21 +89,23 @@ test('goi hop le sau goi hong van di qua binh thuong', () => {
   assert.deepStrictEqual(received, [['u1', 'opus-data']]);
 });
 
-test('handshake UDP sai khong nem trong listener message', async () => {
+test('goi la truoc IP discovery bi bo qua, tra loi that van duoc xu ly', async () => {
   const VoiceUDPClient = require('../src/client/voice/networking/VoiceUDPClient.js');
   const udp = Object.create(VoiceUDPClient.prototype);
   EventEmitter.call(udp);
+  const selected = [];
+  const pushed = [];
   udp.voiceConnection = {
     on() {},
-    sockets: {},
-    authentication: { ssrc: 1, port: 1 },
-    receiver: { packets: { push() {} } },
+    sockets: { ws: { sendPacket: packet => selected.push(packet.d.data) } },
+    authentication: { ssrc: 1, port: 1, mode: 'aead_aes256_gcm_rtpsize' },
+    receiver: { packets: { push: buffer => pushed.push(buffer.length) } },
   };
   const errors = [];
+  const logs = [];
   udp.on('error', error => errors.push(error.message));
-  udp.on('debug', () => {});
+  udp.on('debug', message => logs.push(message));
 
-  // Chan gui di: chi can listener `message` duoc gan.
   const dgram = require('node:dgram');
   const original = dgram.createSocket;
   const fake = new EventEmitter();
@@ -116,8 +118,80 @@ test('handshake UDP sai khong nem trong listener message', async () => {
     dgram.createSocket = original;
   }
 
+  // Rác, goi 1 byte, va mot goi RTP cua phien cu: khong nem, khong `error`, van cho.
   assert.doesNotThrow(() => fake.emit('message', Buffer.alloc(1)));
-  assert.deepStrictEqual(errors, ['UDP_WRONG_HANDSHAKE']);
+  assert.doesNotThrow(() => fake.emit('message', Buffer.alloc(40)));
+  assert.deepStrictEqual(errors, []);
+  assert.deepStrictEqual(selected, []);
+
+  // Tra loi IP discovery that: type 2, dia chi null-terminated tu byte 8, port o 2 byte cuoi.
+  const reply = Buffer.alloc(74);
+  reply.writeUInt16BE(2, 0);
+  reply.write('203.0.113.9', 8, 'utf8');
+  reply.writeUInt16BE(50_000, 72);
+  fake.emit('message', reply);
+  assert.deepStrictEqual(selected, [{ address: '203.0.113.9', port: 50_000, mode: 'aead_aes256_gcm_rtpsize' }]);
+
+  // Sau handshake, goi RTP di vao PacketHandler chu khong qua handshake nua.
+  fake.emit('message', Buffer.alloc(40));
+  assert.deepStrictEqual(pushed, [40]);
+  // Khong dong nao in nguyen byte cua goi (co IP public).
+  assert.ok(!logs.some(line => line.includes('[50,48,51')), logs.join('\n'));
+});
+
+test('goi hong khong bat trang thai speaking', () => {
+  const { handler, receiver } = makeHandler();
+  const speaking = [];
+  receiver.connection.onSpeaking = data => speaking.push(data);
+  const userStat = receiver.connection.ssrcMap.get(1234);
+
+  handler.push(Buffer.concat([rtpHeader(1234), crypto.randomBytes(40)]));
+  assert.deepStrictEqual(speaking, [], 'goi khong giai ma duoc khong noi gi ve viec dang noi');
+  assert.strictEqual(userStat.speaking, 0);
+  assert.strictEqual(handler.speakingTimeouts.size, 0);
+
+  // Co stream dang mo cho user nay thi goi hong duoc bao qua `error` (Receiver chuyen sang debug).
+  const errors = [];
+  handler.on('error', error => errors.push(error));
+  handler.makeStream('u1', 'manual');
+  userStat.hasVideo = true;
+  handler.push(Buffer.concat([rtpHeader(1234), crypto.randomBytes(40)]));
+  assert.strictEqual(errors.length, 1);
+  assert.deepStrictEqual(speaking, []);
+});
+
+test('xchacha20: goi sai auth tag cung bi bo qua, goi dung van di qua', () => {
+  const secretbox = require('../src/client/voice/util/Secretbox.js');
+  const { handler, receiver } = makeHandler();
+  receiver.connection.authentication = { mode: 'aead_xchacha20_poly1305_rtpsize', secret_key: crypto.randomBytes(32) };
+  const received = [];
+  receiver.on('receiverData', (userStat, packet) => received.push(packet.payload.toString('utf8')));
+
+  // Khong co lib sodium trong devDependencies: `methods` la NoLib va nem. Chinh
+  // vi the ma goi rac phai di qua ma khong nem.
+  assert.doesNotThrow(() => handler.push(Buffer.concat([rtpHeader(1234), crypto.randomBytes(40)])));
+  assert.deepStrictEqual(received, []);
+
+  // Gia lap lib: auth tag dung thi tra plaintext, sai thi nem nhu libsodium.
+  const TAG = Buffer.alloc(16, 0xaa);
+  const original = secretbox.methods;
+  secretbox.methods = {
+    crypto_aead_xchacha20poly1305_ietf_decrypt(ciphertext) {
+      if (!ciphertext.subarray(-16).equals(TAG)) throw new Error('invalid tag');
+      return ciphertext.subarray(0, -16);
+    },
+  };
+  try {
+    assert.doesNotThrow(() => handler.push(Buffer.concat([rtpHeader(1234), crypto.randomBytes(40)])));
+    assert.deepStrictEqual(received, []);
+
+    const header = rtpHeader(1234);
+    header.writeUInt8(120, 1);
+    handler.push(Buffer.concat([header, Buffer.from('opus-x'), TAG, Buffer.alloc(4)]));
+    assert.deepStrictEqual(received, ['opus-x']);
+  } finally {
+    secretbox.methods = original;
+  }
 });
 
 test('redactSecrets che token, secret_key va session o moi do sau, khong sua goc', () => {

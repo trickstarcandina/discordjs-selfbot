@@ -143,15 +143,18 @@ class PacketHandler extends EventEmitter {
 
   audioReceiver(ssrc, userStat, opusPacket) {
     const streamInfo = this.streams.get(userStat.userId);
+    // Gói không giải mã được (key cũ sau khi Discord đổi key, hoặc rác) không nói
+    // gì về việc người đó có đang nói hay không. Phải loại trước khi chạm vào
+    // trạng thái speaking, nếu không mỗi gói hỏng thành một cặp speaking bật/tắt giả.
+    if (opusPacket instanceof Error) {
+      // Only emit an error if we were actively receiving packets from this user
+      if (streamInfo) {
+        this.emit('error', opusPacket);
+      }
+      return;
+    }
     // If the user is in video, we need to check if the packet is just silence
     if (userStat.hasVideo) {
-      if (opusPacket instanceof Error) {
-        // Only emit an error if we were actively receiving packets from this user
-        if (streamInfo) {
-          this.emit('error', opusPacket);
-        }
-        return;
-      }
       // Check payload type
       if (opusPacket.header.payloadType !== getPayloadType('opus')) {
         return;
@@ -189,10 +192,6 @@ class PacketHandler extends EventEmitter {
 
     if (streamInfo) {
       const { stream } = streamInfo;
-      if (opusPacket instanceof Error) {
-        this.emit('error', opusPacket);
-        return;
-      }
       if (opusPacket.header.payloadType !== getPayloadType('opus')) {
         return;
       }

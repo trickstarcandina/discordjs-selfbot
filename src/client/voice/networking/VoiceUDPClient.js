@@ -101,14 +101,19 @@ class VoiceConnectionUDPClient extends EventEmitter {
       this.emit('debug', '[UDP] socket closed');
     });
     this.emit('debug', `[UDP] created socket`);
-    socket.once('message', message => {
-      this.emit('debug', `[UDP] message: [${[...message]}] (${message})`);
-      // Ném ở đây là uncaught exception: listener `message` của dgram không có ai
-      // bắt. Báo qua `error` như mọi lỗi khác của socket.
+    // Gói đầu tiên phải là trả lời IP discovery. Gói lạ đến trước (rác, hoặc RTP
+    // của phiên cũ tới cùng cổng) thì bỏ qua và chờ tiếp, không ném: listener
+    // `message` của dgram không có ai bắt, và `error` của VoiceConnection cũng
+    // chỉ có người nghe trong lúc `joinChannel` còn chờ. Không bao giờ có trả lời
+    // thì `connectTimeout` của VoiceConnection lo.
+    const onHandshake = message => {
+      // Không in nguyên gói: nó chứa IP public của tài khoản.
+      this.emit('debug', `[UDP] message: ${message.length} bytes`);
       if (message.length < 2 || message.readUInt16BE(0) !== 2) {
-        this.emit('error', new Error('UDP_WRONG_HANDSHAKE'));
+        this.emit('debug', '[UDP] not an IP discovery reply, ignoring');
         return;
       }
+      socket.removeListener('message', onHandshake);
       // Stop if the sockets have been deleted because the connection has been closed already
       if (!this.voiceConnection.sockets.ws) return;
 
@@ -143,10 +148,9 @@ class VoiceConnectionUDPClient extends EventEmitter {
         writable: false,
       });
 
-      this.emit('debug', `[UDP] << ${JSON.stringify(packet)}`);
-
       socket.on('message', buffer => this.voiceConnection.receiver.packets.push(buffer));
-    });
+    };
+    socket.on('message', onHandshake);
 
     const blankMessage = Buffer.alloc(74);
     blankMessage.writeUInt16BE(1, 0);

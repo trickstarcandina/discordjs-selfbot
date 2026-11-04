@@ -333,7 +333,7 @@ class VoiceConnection extends EventEmitter {
       options,
     );
 
-    this.emit('debug', `Sending voice state update: ${JSON.stringify(options)}`);
+    this.emit('debug', `Sending voice state update: ${stringifyRedacted(options)}`);
 
     return this.channel.client.ws.broadcast({
       op: Opcodes.VOICE_STATE_UPDATE,
@@ -1154,7 +1154,7 @@ class StreamConnection extends VoiceConnection {
       channel_id: this.channel.id,
       preferred_region: null,
     };
-    this.emit('debug', `Signal Stream: ${JSON.stringify(data)}`);
+    this.emit('debug', `Signal Stream: ${stringifyRedacted(data)}`);
     return this.channel.client.ws.broadcast({
       op: Opcodes.STREAM_CREATE,
       d: data,

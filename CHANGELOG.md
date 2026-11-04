@@ -35,7 +35,9 @@ its own; no selfbot patch needed rework.
   one are still in flight; the throw happened inside the UDP socket's `message`
   listener, where nothing catches it. Such packets are now dropped, as are
   packets shorter than one RTP frame. A wrong IP-discovery reply is reported
-  through `error` instead of thrown from the same place.
+  ignored, so the listener keeps waiting for the real reply, instead of thrown
+  from the same place. A packet that fails to decrypt also no longer counts as
+  the sender speaking.
 - `SpeakingBitField` flags were read by their v13 names (`FLAGS.SPEAKING`),
   which are `undefined` in v14. In `PacketHandler` that was another crash on the
   first packet from a user with no speaking state; in `VoiceConnection` every
@@ -50,7 +52,8 @@ its own; no selfbot patch needed rework.
   `[WS] <<` packet logs (IDENTIFY and SESSION_DESCRIPTION). Anyone who wrote
   `client.on('debug')` to a file or pasted it into an issue was handing out the
   keys to that voice session. The values are replaced with `[redacted]`; the
-  packets sent on the wire are unchanged.
+  packets sent on the wire are unchanged. The IP-discovery reply is no longer
+  dumped byte by byte either.
 
 **Not proven:** the new invite features and the voice fixes are covered by unit
 tests, but have not yet been run against a real account.
