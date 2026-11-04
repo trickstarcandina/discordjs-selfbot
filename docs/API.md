@@ -2,7 +2,7 @@
 
 # API reference
 
-This documents **only what this fork adds** on top of discord.js `14.27.0`.
+This documents **only what this fork adds** on top of discord.js `14.28.0`.
 Everything else — `Client`, `Message`, `Guild`, channels, builders, collectors —
 is unchanged and documented at **[discord.js.dev](https://discord.js.dev)**.
 

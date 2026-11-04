@@ -3,6 +3,61 @@
 Every entry below was found by running the library against a real Discord account,
 not by reading code. Where a claim is not proven, it says so.
 
+## 0.4.0
+
+Rebased on discord.js `14.28.0` (upstream `88ff1bda5`). Git merged every file on
+its own; no selfbot patch needed rework.
+
+### Added (from upstream)
+
+- Invites carry roles: `invite.roles` holds the roles a member gets on joining.
+  For a guild the account is not in it holds `InviteRole`s, otherwise the
+  guild's `Role`s. Friend invites have no roles, so it stays `null` there.
+- `guild.invites.create(channel, { roles, targetUsersFile })` creates an invite
+  that grants roles and that only the listed users can accept.
+- `fetchTargetUsers`, `updateTargetUsers` and `fetchTargetUsersJobStatus`, on
+  both `Invite` and `GuildInviteManager`.
+- New exports `BaseRole` (now the parent of `Role`) and `InviteRole`.
+- `channel.permissions` / `appPermissions` and file types on attachment command
+  options, the other two highlights of 14.28.0, were already in the base we
+  forked from.
+
+### Changed
+
+- `@discordjs/builders` raised to `^1.15.0`, `@discordjs/formatters` to
+  `^0.6.2` and `@discordjs/util` to `^1.2.0`, matching discord.js 14.28.0.
+
+### Fixed (voice)
+
+- A voice packet that fails to decrypt no longer kills the process. The
+  decryption libraries throw on a bad auth tag, and that happens with legitimate
+  traffic whenever Discord rotates the key while packets encrypted with the old
+  one are still in flight; the throw happened inside the UDP socket's `message`
+  listener, where nothing catches it. Such packets are now dropped, as are
+  packets shorter than one RTP frame. A wrong IP-discovery reply is reported
+  ignored, so the listener keeps waiting for the real reply, instead of thrown
+  from the same place. A packet that fails to decrypt also no longer counts as
+  the sender speaking.
+- `SpeakingBitField` flags were read by their v13 names (`FLAGS.SPEAKING`),
+  which are `undefined` in v14. In `PacketHandler` that was another crash on the
+  first packet from a user with no speaking state; in `VoiceConnection` every
+  SPEAKING event became an `error`, so streams created with `end: 'silence'`
+  never ended.
+
+### Security
+
+- The voice `debug` output no longer contains the voice token, the session id
+  or `secret_key`. They appeared in plain text in the token/session lines, in
+  the "Ready with authentication details" dump and in the raw `[WS] >>` /
+  `[WS] <<` packet logs (IDENTIFY and SESSION_DESCRIPTION). Anyone who wrote
+  `client.on('debug')` to a file or pasted it into an issue was handing out the
+  keys to that voice session. The values are replaced with `[redacted]`; the
+  packets sent on the wire are unchanged. The IP-discovery reply is no longer
+  dumped byte by byte either.
+
+**Not proven:** the new invite features and the voice fixes are covered by unit
+tests, but have not yet been run against a real account.
+
 ## 0.3.0
 
 A security release. Three of the fixes change behaviour that code may rely on, so
