@@ -2,7 +2,7 @@
 
 # Chuyển từ `discord.js-selfbot-v13`
 
-Thư viện này dựng trên `discord.js@14.28.0`, thay cho `discord.js-selfbot-v13`
+Thư viện này dựng trên `discord.js@14.28.1`, thay cho `discord.js-selfbot-v13`
 (nền `discord.js@13.17.1`, đã archive).
 
 Lớp tương thích **bật mặc định**, nên phần lớn code cũ chạy được ngay. Tài liệu

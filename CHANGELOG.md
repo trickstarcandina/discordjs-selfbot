@@ -3,6 +3,23 @@
 Every entry below was found by running the library against a real Discord account,
 not by reading code. Where a claim is not proven, it says so.
 
+## 0.4.1
+
+Rebased on discord.js `14.28.1` (upstream `e19a9bd35`). Git merged every file on
+its own; no selfbot patch needed rework. No dependency range changed.
+
+### Fixed (from upstream)
+
+- `channel.permissions` and `channel.appPermissions` are scoped to the
+  interaction they came with. The resolved channel of an interaction carries the
+  _invoker's_ computed permissions, and `BaseChannel._patch` wrote them onto the
+  cached channel, so two interactions on the same channel from two users could
+  read each other's values. The permissions now live on a clone owned by the
+  interaction, and the cached channel keeps `null`.
+
+**Not proven:** the fix is covered by unit tests, but has not yet been run
+against a real account.
+
 ## 0.4.0
 
 Rebased on discord.js `14.28.0` (upstream `88ff1bda5`). Git merged every file on
