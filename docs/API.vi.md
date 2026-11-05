@@ -2,7 +2,7 @@
 
 # Tham chiếu API
 
-Tài liệu này **chỉ mô tả phần fork thêm vào** discord.js `14.28.0`. Mọi thứ còn
+Tài liệu này **chỉ mô tả phần fork thêm vào** discord.js `14.28.1`. Mọi thứ còn
 lại — `Client`, `Message`, `Guild`, channel, builder, collector — giữ nguyên và
 đã có tài liệu tại **[discord.js.dev](https://discord.js.dev)**.
 
