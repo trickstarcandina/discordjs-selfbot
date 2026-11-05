@@ -3,6 +3,7 @@
 const EventEmitter = require('events');
 const { setTimeout, setInterval } = require('node:timers');
 const { DAVE_PROTOCOL_VERSION } = require('./DAVESession');
+const { stringifyRedacted } = require('../util/Redact');
 const { VoiceOpcodes } = require('../util/VoiceConstants');
 const WebSocket = require('../util/VoiceWebSocketShim');
 
@@ -144,8 +145,8 @@ class VoiceWebSocket extends EventEmitter {
    * @returns {Promise<string>}
    */
   async sendPacket(packet) {
-    packet = JSON.stringify(packet);
-    return this.send(packet);
+    // IDENTIFY mang voice token; log phải che nó.
+    return this.send(JSON.stringify(packet), stringifyRedacted(packet));
   }
 
   /**
@@ -236,7 +237,7 @@ class VoiceWebSocket extends EventEmitter {
    * @param {Object} packet The received packet
    */
   onPacket(packet) {
-    this.emit('debug', `[WS] << ${JSON.stringify(packet)}`);
+    this.emit('debug', `[WS] << ${stringifyRedacted(packet)}`);
     if (packet.seq) this._sequenceNumber = packet.seq;
     switch (packet.op) {
       case VoiceOpcodes.HELLO:

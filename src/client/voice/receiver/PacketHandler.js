@@ -24,6 +24,8 @@ const DISCORD_SPEAKING_DELAY = 250;
 // Unused: const HEADER_EXTENSION_BYTE = Buffer.from([0xbe, 0xde]);
 const UNPADDED_NONCE_LENGTH = 4;
 const AUTH_TAG_LENGTH = 16;
+const RTP_HEADER_LENGTH = 12;
+const MIN_PACKET_LENGTH = RTP_HEADER_LENGTH + AUTH_TAG_LENGTH + UNPADDED_NONCE_LENGTH;
 
 class Readable extends require('stream').Readable {
   _read() {} // eslint-disable-line no-empty-function
@@ -141,15 +143,18 @@ class PacketHandler extends EventEmitter {
 
   audioReceiver(ssrc, userStat, opusPacket) {
     const streamInfo = this.streams.get(userStat.userId);
+    // Gói không giải mã được (key cũ sau khi Discord đổi key, hoặc rác) không nói
+    // gì về việc người đó có đang nói hay không. Phải loại trước khi chạm vào
+    // trạng thái speaking, nếu không mỗi gói hỏng thành một cặp speaking bật/tắt giả.
+    if (opusPacket instanceof Error) {
+      // Only emit an error if we were actively receiving packets from this user
+      if (streamInfo) {
+        this.emit('error', opusPacket);
+      }
+      return;
+    }
     // If the user is in video, we need to check if the packet is just silence
     if (userStat.hasVideo) {
-      if (opusPacket instanceof Error) {
-        // Only emit an error if we were actively receiving packets from this user
-        if (streamInfo) {
-          this.emit('error', opusPacket);
-        }
-        return;
-      }
       // Check payload type
       if (opusPacket.header.payloadType !== getPayloadType('opus')) {
         return;
@@ -168,7 +173,7 @@ class PacketHandler extends EventEmitter {
       // Ensure at least the speaking bit is set.
       // As the object is by reference, it's only needed once per client re-connect.
       if (userStat.speaking === 0) {
-        userStat.speaking = Speaking.FLAGS.SPEAKING;
+        userStat.speaking = Speaking.Flags.Speaking;
       }
       this.connection.onSpeaking({ user_id: userStat.userId, ssrc: ssrc, speaking: userStat.speaking });
       speakingTimeout = setTimeout(() => {
@@ -187,10 +192,6 @@ class PacketHandler extends EventEmitter {
 
     if (streamInfo) {
       const { stream } = streamInfo;
-      if (opusPacket instanceof Error) {
-        this.emit('error', opusPacket);
-        return;
-      }
       if (opusPacket.header.payloadType !== getPayloadType('opus')) {
         return;
       }
@@ -254,18 +255,41 @@ class PacketHandler extends EventEmitter {
     return packet;
   }
 
+  /**
+   * `parseBuffer` nhưng không bao giờ ném.
+   *
+   * Thư viện mã hoá ném khi auth tag sai, và điều đó xảy ra với gói hợp lệ:
+   * Discord đổi key qua `SESSION_DESCRIPTION` mới trong khi vài gói mã hoá bằng
+   * key cũ còn trên đường. `push` chạy thẳng trong listener `message` của socket
+   * UDP, nơi một exception là uncaught và kết thúc process.
+   * @param {Buffer} buffer Gói RTP đã mã hoá
+   * @returns {Object|Error} Gói đã parse, hoặc `Error` để code gọi bỏ qua
+   * @private
+   */
+  _parseSafely(buffer) {
+    try {
+      return this.parseBuffer(buffer);
+    } catch (error) {
+      return error instanceof Error ? error : new Error(String(error));
+    }
+  }
+
   push(buffer) {
+    // Header RTP 12 byte, auth tag 16, nonce 4: ngắn hơn thì không phải gói
+    // voice, và `readUInt32BE(8)` sẽ ném trước khi tới chỗ giải mã.
+    if (!Buffer.isBuffer(buffer) || buffer.length < MIN_PACKET_LENGTH) return;
+
     const ssrc = buffer.readUInt32BE(8);
     let userStat, packet;
     if (this.connection.ssrcMap.has(ssrc)) {
       userStat = this.connection.ssrcMap.get(ssrc); // Audio_ssrc
-      packet = this._daveDecrypt(this.parseBuffer(buffer), userStat.userId);
+      packet = this._daveDecrypt(this._parseSafely(buffer), userStat.userId);
       if (packet === null) return;
       this.audioReceiver(ssrc, userStat, packet);
       this.audioReceiverForStream(ssrc, userStat, packet);
     } else if (this.connection.ssrcMap.has(ssrc - 1)) {
       userStat = this.connection.ssrcMap.get(ssrc - 1); // Video_ssrc
-      packet = this.parseBuffer(buffer);
+      packet = this._parseSafely(buffer);
       this.videoReceiver(ssrc, userStat, packet);
     }
     if (userStat && !(packet instanceof Error)) this.receiver.emit('receiverData', userStat, packet);

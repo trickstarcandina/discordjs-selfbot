@@ -6,8 +6,8 @@
 | ------------- | ------------------------------------------ |
 | Repo          | https://github.com/discordjs/discord.js    |
 | Branch        | `v14`                                      |
-| Commit        | `8047fe7c55d99ed01dfe82b4a260be45081baf26` |
-| Version       | `14.27.0`                                  |
+| Commit        | `88ff1bda586b146cb2c799c58c4534657b1a3255` |
+| Version       | `14.28.0`                                  |
 | Đường dẫn lấy | `packages/discord.js/{src,typings}`        |
 
 ## Nâng cấp
@@ -15,17 +15,28 @@
 Nhánh `upstream-vendor` chỉ chứa `src/` và `typings/` **nguyên bản, chưa patch**. Nó là merge base:
 git so bản gốc cũ với bản gốc mới rồi tự áp lại patch selfbot, thay vì bắt tay dán lại từng file.
 
-    ./scripts/sync-upstream.sh <ref-mới>   # ghi commit mới lên upstream-vendor
-    git merge upstream-vendor              # git tự áp lại patch
-    npm test                               # lưới an toàn
+    git clone --filter=blob:none https://github.com/discordjs/discord.js ../discord.js  # lần đầu
+    git -C ../discord.js fetch --tags                  # cập nhật bản clone upstream
+    git fetch origin upstream-vendor:upstream-vendor   # script cần nhánh này ở local
+    ./scripts/sync-upstream.sh <version>               # ghi commit mới lên upstream-vendor
+    git merge upstream-vendor                          # git tự áp lại patch
+    npm view discord.js@<version> dependencies         # chỉnh package.json cho khớp, rồi npm install
+    npm test                                           # lưới an toàn
+    git push origin upstream-vendor                    # đẩy merge base mới lên
     # cập nhật bảng phía trên + bảng file bị sửa phía dưới
+
+`<version>` là số phiên bản, ví dụ `14.28.0`: discord.js gắn tag cho mỗi bản phát hành đúng bằng số
+phiên bản. Ref git nào khác cũng dùng được.
 
 Conflict chỉ nổ ở file upstream sửa đúng dòng fork đã sửa — đúng danh sách trong bảng dưới. Thử với
 `origin/main` (đã là nhánh v15 đang phát triển, thay đổi rất lớn): 358 file đổi, git tự merge 339,
 chỉ 19 file phải xử tay. Nâng cấp trong dòng v14 sẽ ít hơn nhiều.
 
-Hai điều dễ vấp:
+Ba điều dễ vấp:
 
+- Sync xong phải push `upstream-vendor`. Clone repo chỉ lấy `main`, người sau fetch về đúng thứ đang
+  có trên remote; nếu nó vẫn là bản cũ, lần sync của họ gắn commit mới lên đó và git so từ mốc sai,
+  áp lại những thay đổi `main` đã có.
 - Đừng commit lên `upstream-vendor` bằng `git commit` thường. Hook `pre-commit` chạy lint-staged, nó
   format lại mã gốc và làm hỏng đúng thứ nhánh này cần giữ nguyên xi. Script dùng `git commit-tree`
   nên không dính hook; nhánh này cũng không có `test/` để `node --test` chạy.

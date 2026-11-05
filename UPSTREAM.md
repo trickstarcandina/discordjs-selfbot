@@ -6,8 +6,8 @@
 | ---------- | ------------------------------------------ |
 | Repo       | https://github.com/discordjs/discord.js    |
 | Branch     | `v14`                                      |
-| Commit     | `8047fe7c55d99ed01dfe82b4a260be45081baf26` |
-| Version    | `14.27.0`                                  |
+| Commit     | `88ff1bda586b146cb2c799c58c4534657b1a3255` |
+| Version    | `14.28.0`                                  |
 | Taken from | `packages/discord.js/{src,typings}`        |
 
 ## Upgrading
@@ -16,19 +16,30 @@ The `upstream-vendor` branch holds `src/` and `typings/` **pristine, unpatched**
 It is the merge base: git diffs the old upstream against the new one and reapplies
 the selfbot patches itself, instead of you pasting them back file by file.
 
-    cd ../discord.js && git fetch          # refresh the upstream clone
-    ./scripts/sync-upstream.sh <new-ref>   # write a commit onto upstream-vendor
-    git merge upstream-vendor              # git reapplies the patches
-    npm test                               # safety net
+    git clone --filter=blob:none https://github.com/discordjs/discord.js ../discord.js  # once
+    git -C ../discord.js fetch --tags                  # refresh the upstream clone
+    git fetch origin upstream-vendor:upstream-vendor   # the script needs it as a local branch
+    ./scripts/sync-upstream.sh <version>               # write a commit onto upstream-vendor
+    git merge upstream-vendor                          # git reapplies the patches
+    npm view discord.js@<version> dependencies         # align package.json, then npm install
+    npm test                                           # safety net
+    git push origin upstream-vendor                    # publish the new merge base
     # update the table above and the divergence table below
+
+`<version>` is the release, e.g. `14.28.0`: discord.js tags each release with the
+bare version. Any other git ref works too.
 
 Conflicts only occur where upstream touched a line the fork had already changed —
 exactly the files in the table below. A dry run against `origin/main` (already the
 v15 development line, so a worst case): 358 files changed, git merged 339, only 19
 needed hands. Upgrades within the v14 line will be far smaller.
 
-Two things to watch:
+Three things to watch:
 
+- `upstream-vendor` must be pushed after every sync. A clone only gets `main`, so
+  the next person fetches whatever the remote holds; if it is still the old
+  release, their sync parents the new commit on it and git diffs from the wrong
+  base, reapplying changes `main` already has.
 - Do not commit to `upstream-vendor` with a plain `git commit`. The `pre-commit`
   hook runs lint-staged, which reformats the pristine sources — destroying the one
   thing that branch exists to preserve. The script uses `git commit-tree` so no
