@@ -2,7 +2,7 @@
 
 # Migrating from `discord.js-selfbot-v13`
 
-This library is built on `discord.js@14.28.0`, replacing `discord.js-selfbot-v13`
+This library is built on `discord.js@14.28.1`, replacing `discord.js-selfbot-v13`
 (based on `discord.js@13.17.1`, archived).
 
 The compatibility layer is **on by default**, so most old code runs unchanged.
