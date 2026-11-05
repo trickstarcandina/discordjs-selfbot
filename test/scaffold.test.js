@@ -9,7 +9,7 @@ test('src/index.js loads', () => {
   assert.strictEqual(typeof djs.Options, 'function');
 });
 
-test('upstream version is pinned to 14.28.0', () => {
+test('upstream version is pinned to 14.28.1', () => {
   const pkg = require('../package.json');
   assert.strictEqual(pkg.dependencies['@discordjs/rest'], '2.6.3');
   assert.strictEqual(pkg.dependencies['@discordjs/ws'], '1.2.3');

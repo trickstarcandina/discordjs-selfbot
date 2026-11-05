@@ -5,7 +5,7 @@
 <h1>discordjs-selfbot</h1>
 
 <p><strong>discord.js v14 cho tài khoản người dùng.</strong><br>
-Kế nhiệm <a href="https://github.com/aiko-chan-ai/discord.js-selfbot-v13"><code>discord.js-selfbot-v13</code></a> đã archive, xây trên <a href="https://github.com/discordjs/discord.js">discord.js</a> <code>v14.28.0</code>.</p>
+Kế nhiệm <a href="https://github.com/aiko-chan-ai/discord.js-selfbot-v13"><code>discord.js-selfbot-v13</code></a> đã archive, xây trên <a href="https://github.com/discordjs/discord.js">discord.js</a> <code>v14.28.1</code>.</p>
 
 <p>
 <a href="https://www.npmjs.com/package/@trickstarcandina/discordjs-selfbot"><img alt="Phiên bản npm" src="https://img.shields.io/npm/v/@trickstarcandina/discordjs-selfbot?logo=npm&color=cb3837"></a>
@@ -16,7 +16,7 @@ Kế nhiệm <a href="https://github.com/aiko-chan-ai/discord.js-selfbot-v13"><c
 </p>
 
 <p>
-<a href="https://github.com/discordjs/discord.js/tree/14.28.0"><img alt="Dựa trên discord.js v14.28.0" src="https://img.shields.io/badge/discord.js-v14.28.0-5865F2?logo=discord&logoColor=white"></a>
+<a href="https://github.com/discordjs/discord.js/tree/14.28.1"><img alt="Dựa trên discord.js v14.28.1" src="https://img.shields.io/badge/discord.js-v14.28.1-5865F2?logo=discord&logoColor=white"></a>
 <a href="./package.json"><img alt="Phiên bản Node.js" src="https://img.shields.io/node/v/@trickstarcandina/discordjs-selfbot?logo=node.js&logoColor=white&color=339933"></a>
 <a href="https://github.com/trickstarcandina/discordjs-selfbot/actions/workflows/publish.yml"><img alt="Workflow publish" src="https://img.shields.io/github/actions/workflow/status/trickstarcandina/discordjs-selfbot/publish.yml?label=publish&logo=githubactions&logoColor=white"></a>
 <a href="https://github.com/trickstarcandina/discordjs-selfbot/actions/workflows/security.yml"><img alt="Workflow security" src="https://img.shields.io/github/actions/workflow/status/trickstarcandina/discordjs-selfbot/security.yml?label=security&logo=githubactions&logoColor=white"></a>
