@@ -1,7 +1,7 @@
 'use strict';
 
 const { DefaultRestOptions, DefaultUserAgentAppendix } = require('@discordjs/rest');
-const { DefaultSuperProperties, DefaultCapabilities, DefaultClientState } = require('./SelfbotDefaults');
+const { DefaultSuperProperties, DefaultCapabilities, DefaultClientState, WebApiVersion } = require('./SelfbotDefaults');
 const { toSnakeCase } = require('./Transformers');
 const { version } = require('../../package.json');
 
@@ -127,7 +127,7 @@ class Options extends null {
       sweepers: this.DefaultSweeperSettings,
       ws: {
         large_threshold: 50,
-        version: 10,
+        version: Number(WebApiVersion),
         properties: { ...DefaultSuperProperties },
         capabilities: DefaultCapabilities,
         client_state: { ...DefaultClientState },
@@ -145,6 +145,8 @@ class Options extends null {
       captchaRetryLimit: 3,
       rest: {
         ...DefaultRestOptions,
+        // User accounts live on the version the web client talks, not on the bot default.
+        version: WebApiVersion,
         userAgentAppendix: this.userAgentAppendix,
       },
       jsonTransformer: toSnakeCase,

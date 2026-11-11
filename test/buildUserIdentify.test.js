@@ -19,6 +19,17 @@ test('khong co intents va shard trong payload', () => {
   assert.ok(!('shard' in d), 'payload user account khong duoc co shard');
 });
 
+test('payload co dung key set cua web client', () => {
+  const d = buildUserIdentify(base);
+  // Captured from a live web client session: token, capabilities, properties, client_state. No compress.
+  assert.deepStrictEqual(Object.keys(d), ['token', 'capabilities', 'properties', 'client_state']);
+  assert.ok(!('compress' in d), 'web client khong gui compress trong identify');
+});
+
+test('client_state chi co guild_versions', () => {
+  assert.deepStrictEqual(DefaultClientState, { guild_versions: {} });
+});
+
 test('co token, capabilities, client_state, properties', () => {
   const d = buildUserIdentify(base);
   assert.strictEqual(d.token, 'tok');
