@@ -4,6 +4,7 @@ const { REST, DefaultRestOptions } = require('@discordjs/rest');
 const { Agent, ProxyAgent, buildConnector } = require('undici');
 const {
   DefaultUserAgent,
+  DefaultSecChUa,
   DefaultSuperProperties,
   DefaultCiphers,
   encodeSuperProperties,
@@ -22,11 +23,11 @@ function buildSelfbotHeaders(clientOptions) {
 
   return {
     accept: '*/*',
-    'accept-language': 'en-US',
+    'accept-language': 'en-US,en;q=0.9',
     origin: 'https://discord.com',
     priority: 'u=1, i',
     referer: 'https://discord.com/channels/@me',
-    'sec-ch-ua': '"Not:A-Brand";v="24", "Chromium";v="134"',
+    'sec-ch-ua': DefaultSecChUa,
     'sec-ch-ua-mobile': '?0',
     'sec-ch-ua-platform': '"Windows"',
     'sec-fetch-dest': 'empty',
@@ -86,6 +87,19 @@ function rewriteUserAgent(headers, userAgent) {
   }
 
   headers['user-agent'] = userAgent;
+  return headers;
+}
+
+/**
+ * Removes the `Origin` header. A browser omits it on same-origin GET requests, so sending it there marks
+ * the request as scripted.
+ * @param {Object} headers Header của request
+ * @returns {Object} chính object headers đã sửa
+ */
+function removeOrigin(headers) {
+  for (const key of Object.keys(headers)) {
+    if (key.toLowerCase() === 'origin') delete headers[key];
+  }
   return headers;
 }
 
@@ -202,6 +216,8 @@ function createSelfbotREST(clientOptions) {
       }
       if (token) rewriteAuthorization(init.headers, token);
       rewriteUserAgent(init.headers, userAgent);
+      // Chrome sends Origin only where the fetch spec asks for it, never on a same-origin GET.
+      if (init.method === undefined || init.method.toUpperCase() === 'GET') removeOrigin(init.headers);
 
       const send = requestInit => DefaultRestOptions.makeRequest(url, { ...requestInit, dispatcher });
 
@@ -252,6 +268,7 @@ module.exports = {
   buildSelfbotHeaders,
   rewriteAuthorization,
   rewriteUserAgent,
+  removeOrigin,
   buildDispatcher,
   makeGatewayBotResponse,
 };

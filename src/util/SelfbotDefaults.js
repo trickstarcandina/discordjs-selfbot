@@ -1,37 +1,72 @@
 'use strict';
 
 const { Buffer } = require('node:buffer');
+const { randomUUID } = require('node:crypto');
 
 /**
- * User-Agent giả lập Discord desktop app. Phải khớp với `browser_user_agent`
- * trong super properties, nếu không Discord sẽ đánh dấu request bất thường.
+ * Chrome release the client claims. Every place that names a version must name this one: the User-Agent,
+ * `browser_version`, and the `sec-ch-ua` client hints. Discord compares them.
+ * @type {string}
+ */
+const DefaultChromeVersion = '153.0.0.0';
+
+/**
+ * API version the Discord web client talks. User-only endpoints live here; the bot default is v10.
+ * @type {string}
+ */
+const WebApiVersion = '9';
+
+/**
+ * User-Agent of the Discord web client in Chrome on Windows.
  * @type {string}
  */
 const DefaultUserAgent =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) ' +
-  'Chrome/134.0.0.0 Safari/537.36';
+  `Chrome/${DefaultChromeVersion} Safari/537.36`;
 
 /**
- * Super properties gửi kèm mọi request REST (header `x-super-properties`)
- * và trong payload identify của gateway. Key KHÔNG có tiền tố `$` —
- * schema cũ dùng `$os`, Discord đã bỏ.
+ * `sec-ch-ua` exactly as Chrome sends it: three brands, the real one first. A pair of brands, or one
+ * whose version does not match the User-Agent, tells a server that the client is not Chrome.
+ * @type {string}
+ */
+const DefaultSecChUa =
+  `"Google Chrome";v="${DefaultChromeVersion.split('.')[0]}", " Not;A Brand";v="99", ` +
+  `"Chromium";v="${DefaultChromeVersion.split('.')[0]}"`;
+
+/**
+ * Build number of the Discord web client, verified on 2026-11-11. Discord ships a new build most days and
+ * reports it on every request, so prefer {@link fetchClientBuildNumber} over this constant.
+ * @type {number}
+ */
+const DefaultClientBuildNumber = 670026;
+
+/**
+ * Super properties sent with every REST request (header `x-super-properties`) and in the gateway identify
+ * payload. Key set, order and values follow the web client; keys carry no `$` prefix, Discord dropped the
+ * old schema.
  * @type {Object}
  */
 const DefaultSuperProperties = {
   os: 'Windows',
   browser: 'Chrome',
   device: '',
+  device_model_name: '',
   system_locale: 'en-US',
+  has_client_mods: false,
   browser_user_agent: DefaultUserAgent,
-  browser_version: '134.0.0.0',
+  browser_version: DefaultChromeVersion,
   os_version: '10',
   referrer: '',
   referring_domain: '',
   referrer_current: '',
   referring_domain_current: '',
   release_channel: 'stable',
-  client_build_number: 384477,
+  client_build_number: DefaultClientBuildNumber,
   client_event_source: null,
+  // The web client draws both once per page load.
+  client_launch_id: randomUUID(),
+  launch_signature: randomUUID(),
+  client_app_state: 'unfocused',
 };
 
 /**
@@ -101,12 +136,37 @@ function encodeSuperProperties(properties) {
   return Buffer.from(JSON.stringify(normalizeSuperProperties(properties)), 'utf8').toString('base64');
 }
 
+/**
+ * Reads the build number the live web client reports. Its app shell carries `window.GLOBAL_ENV`, which is
+ * where the client itself takes `client_build_number` from, so this is the value Discord expects today.
+ * @param {Function} [fetchImpl] Fetch implementation, defaults to the global one
+ * @param {AbortSignal} [signal] Abort signal
+ * @returns {Promise<number>}
+ */
+async function fetchClientBuildNumber(fetchImpl = globalThis.fetch, signal = undefined) {
+  const response = await fetchImpl('https://discord.com/app', {
+    headers: { 'user-agent': DefaultUserAgent },
+    signal,
+  });
+  if (!response.ok) throw new Error(`Discord app shell returned HTTP ${response.status}`);
+
+  const buildNumber = /"BUILD_NUMBER":"(\d+)"/.exec(await response.text())?.[1];
+  if (!buildNumber) throw new Error('Discord app shell did not contain a build number');
+
+  return Number(buildNumber);
+}
+
 module.exports = {
+  DefaultChromeVersion,
   DefaultUserAgent,
+  DefaultSecChUa,
+  DefaultClientBuildNumber,
+  WebApiVersion,
   DefaultSuperProperties,
   DefaultCapabilities,
   DefaultClientState,
   DefaultCiphers,
   normalizeSuperProperties,
   encodeSuperProperties,
+  fetchClientBuildNumber,
 };
