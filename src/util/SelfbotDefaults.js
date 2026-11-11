@@ -70,24 +70,21 @@ const DefaultSuperProperties = {
 };
 
 /**
- * Gateway capabilities bitfield.
+ * Gateway capabilities bitfield the web client identifies with, captured from a live session on
+ * 2026-11-11. It selects the dispatch format Discord sends, so a stale value changes the payloads a
+ * client receives.
  * Tham khảo: https://docs.discord.food/topics/gateway#gateway-capabilities
  * @type {number}
  */
-const DefaultCapabilities = 161789;
+const DefaultCapabilities = 1767421;
 
 /**
- * Trạng thái cache phía client gửi kèm identify. Client mới thì rỗng hết.
+ * Client-side cache state sent with the identify. A fresh web client reports an empty guild version map
+ * and nothing else; the older seven-field shape no longer matches what the client sends.
  * @type {Object}
  */
 const DefaultClientState = {
   guild_versions: {},
-  highest_last_message_id: '0',
-  read_state_version: 0,
-  user_guild_settings_version: -1,
-  user_settings_version: -1,
-  private_channels_version: '0',
-  api_code_version: 0,
 };
 
 /**
