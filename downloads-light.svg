@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="320" viewBox="0 0 800 320" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif" role="img" aria-label="npm downloads per week">
+<rect x="0.5" y="0.5" width="799" height="319" rx="6" fill="#ffffff" stroke="#d1d9e0"/>
+<text x="24" y="32" font-size="16" font-weight="600" fill="#1f2328">npm downloads per week</text>
+<text x="24" y="54" font-size="12" fill="#59636e">1,272 total · @trickstarcandina/discordjs-selfbot · updated 2026-11-13</text>
+<line x1="56" x2="776" y1="280" y2="280" stroke="#eff2f5"/>
+<text x="48" y="284" font-size="11" text-anchor="end" fill="#59636e">0</text>
+<line x1="56" x2="776" y1="212" y2="212" stroke="#eff2f5"/>
+<text x="48" y="216" font-size="11" text-anchor="end" fill="#59636e">200</text>
+<line x1="56" x2="776" y1="144" y2="144" stroke="#eff2f5"/>
+<text x="48" y="148" font-size="11" text-anchor="end" fill="#59636e">400</text>
+<line x1="56" x2="776" y1="76" y2="76" stroke="#eff2f5"/>
+<text x="48" y="80" font-size="11" text-anchor="end" fill="#59636e">600</text>
+<rect x="58.0" y="268.8" width="47.4" height="11.2" rx="2" fill="#cb3837"><title>2026-08-08 – 2026-08-14: 33</title></rect>
+<rect x="109.4" y="273.9" width="47.4" height="6.1" rx="2" fill="#cb3837"><title>2026-08-15 – 2026-08-21: 18</title></rect>
+<rect x="160.9" y="274.2" width="47.4" height="5.8" rx="2" fill="#cb3837"><title>2026-08-22 – 2026-08-28: 17</title></rect>
+<rect x="212.3" y="273.9" width="47.4" height="6.1" rx="2" fill="#cb3837"><title>2026-08-29 – 2026-09-04: 18</title></rect>
+<rect x="263.7" y="278.3" width="47.4" height="1.7" rx="2" fill="#cb3837"><title>2026-09-05 – 2026-09-11: 5</title></rect>
+<rect x="315.1" y="270.8" width="47.4" height="9.2" rx="2" fill="#cb3837"><title>2026-09-12 – 2026-09-18: 27</title></rect>
+<rect x="366.6" y="276.6" width="47.4" height="3.4" rx="2" fill="#cb3837"><title>2026-09-19 – 2026-09-25: 10</title></rect>
+<rect x="418.0" y="274.6" width="47.4" height="5.4" rx="2" fill="#cb3837"><title>2026-09-26 – 2026-10-02: 16</title></rect>
+<rect x="469.4" y="272.2" width="47.4" height="7.8" rx="2" fill="#cb3837"><title>2026-10-03 – 2026-10-09: 23</title></rect>
+<rect x="520.9" y="276.6" width="47.4" height="3.4" rx="2" fill="#cb3837"><title>2026-10-10 – 2026-10-16: 10</title></rect>
+<rect x="572.3" y="272.9" width="47.4" height="7.1" rx="2" fill="#cb3837"><title>2026-10-17 – 2026-10-23: 21</title></rect>
+<rect x="623.7" y="200.1" width="47.4" height="79.9" rx="2" fill="#cb3837"><title>2026-10-24 – 2026-10-30: 235</title></rect>
+<rect x="675.1" y="139.2" width="47.4" height="140.8" rx="2" fill="#cb3837"><title>2026-10-31 – 2026-11-06: 414</title></rect>
+<rect x="726.6" y="243.6" width="47.4" height="36.4" rx="2" fill="#cb3837"><title>2026-11-07 – 2026-11-13: 107</title></rect>
+<line x1="232.32653061224488" x2="232.32653061224488" y1="280" y2="284" stroke="#59636e"/>
+<text x="232.32653061224488" y="298" font-size="11" text-anchor="middle" fill="#59636e">Sep</text>
+<line x1="452.73469387755097" x2="452.73469387755097" y1="280" y2="284" stroke="#59636e"/>
+<text x="452.73469387755097" y="298" font-size="11" text-anchor="middle" fill="#59636e">Oct</text>
+<line x1="680.4897959183673" x2="680.4897959183673" y1="280" y2="284" stroke="#59636e"/>
+<text x="680.4897959183673" y="298" font-size="11" text-anchor="middle" fill="#59636e">Nov</text>
+<line x1="56" x2="776" y1="280" y2="280" stroke="#d1d9e0"/>
+<line x1="56" x2="56" y1="70" y2="280" stroke="#5865f2" stroke-dasharray="3 3"/>
+<text x="60" y="70" font-size="11" font-weight="600" text-anchor="start" fill="#5865f2">v0.2.0</text>
+<line x1="56" x2="56" y1="70" y2="280" stroke="#5865f2" stroke-dasharray="3 3"/>
+<text x="60" y="83" font-size="11" font-weight="600" text-anchor="start" fill="#5865f2">v0.2.1</text>
+<line x1="643.7551020408164" x2="643.7551020408164" y1="70" y2="280" stroke="#5865f2" stroke-dasharray="3 3"/>
+<text x="647.7551020408164" y="70" font-size="11" font-weight="600" text-anchor="start" fill="#5865f2">v0.3.0</text>
+<line x1="702.530612244898" x2="702.530612244898" y1="70" y2="280" stroke="#5865f2" stroke-dasharray="3 3"/>
+<text x="706.530612244898" y="70" font-size="11" font-weight="600" text-anchor="start" fill="#5865f2">v0.4.0</text>
+<line x1="709.8775510204082" x2="709.8775510204082" y1="70" y2="280" stroke="#5865f2" stroke-dasharray="3 3"/>
+<text x="713.8775510204082" y="83" font-size="11" font-weight="600" text-anchor="start" fill="#5865f2">v0.4.1</text>
+</svg>
