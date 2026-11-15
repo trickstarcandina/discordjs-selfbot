@@ -25,25 +25,70 @@ const DefaultUserAgent =
   `Chrome/${DefaultChromeVersion} Safari/537.36`;
 
 /**
- * `sec-ch-ua` exactly as Chrome sends it: three brands, the real one first. A pair of brands, or one
- * whose version does not match the User-Agent, tells a server that the client is not Chrome.
- * @type {string}
+ * Builds `sec-ch-ua` the way Chrome does. The GREASE brand, its version and the order of the three brands
+ * all derive from the major version (Chromium `GetGreasedUserAgentBrandVersion`), so a header copied from
+ * another release names a brand this release never sends.
+ * @param {string} chromeVersion Chrome version, e.g. `153.0.0.0`
+ * @returns {string}
  */
-const DefaultSecChUa =
-  `"Google Chrome";v="${DefaultChromeVersion.split('.')[0]}", " Not;A Brand";v="99", ` +
-  `"Chromium";v="${DefaultChromeVersion.split('.')[0]}"`;
+function buildSecChUa(chromeVersion) {
+  const major = Number.parseInt(chromeVersion, 10);
+  const chars = [' ', '(', ':', '-', '.', '/', ')', ';', '=', '?', '_'];
+  const grease = `"Not${chars[major % 11]}A${chars[(major + 1) % 11]}Brand";v="${['8', '99', '24'][major % 3]}"`;
+
+  // Slot of the GREASE brand, of Chromium and of the real brand.
+  const order = [
+    [0, 1, 2],
+    [0, 2, 1],
+    [1, 0, 2],
+    [1, 2, 0],
+    [2, 0, 1],
+    [2, 1, 0],
+  ][major % 6];
+  const brands = [];
+  brands[order[0]] = grease;
+  brands[order[1]] = `"Chromium";v="${major}"`;
+  brands[order[2]] = `"Google Chrome";v="${major}"`;
+  return brands.join(', ');
+}
 
 /**
- * Build number of the Discord web client, verified on 2026-11-11. Discord ships a new build most days and
- * reports it on every request, so prefer {@link fetchClientBuildNumber} over this constant.
+ * `sec-ch-ua` of the default Chrome release.
+ * @type {string}
+ */
+const DefaultSecChUa = buildSecChUa(DefaultChromeVersion);
+
+/**
+ * Build number of the Discord web client, read from its app shell on 2026-11-15. Discord ships a new build
+ * most days and reports it on every request; pass `ws.properties.client_build_number` to use a newer one.
  * @type {number}
  */
-const DefaultClientBuildNumber = 670026;
+const DefaultClientBuildNumber = 673764;
+
+/**
+ * Bits of the launch signature the web client sets when it detects a client mod (BetterDiscord, Vencord
+ * and others). An unmodified client sends them all as zero.
+ * Reference: https://docs.discord.food/reference#launch-signature
+ * @type {number[]}
+ */
+const ClientModBits = [119, 108, 100, 91, 84, 75, 61, 55, 48, 38, 24, 11];
+
+/**
+ * Draws a launch signature: a random UUID with every client mod bit cleared. A plain random UUID leaves
+ * those bits random and so reports a client mod, against `has_client_mods: false`.
+ * @param {string} [uuid] UUID to derive the signature from
+ * @returns {string}
+ */
+function generateLaunchSignature(uuid = randomUUID()) {
+  const mask = ClientModBits.reduce((bits, bit) => bits | (1n << BigInt(bit)), 0n);
+  const hex = (BigInt(`0x${uuid.replaceAll('-', '')}`) & ~mask).toString(16).padStart(32, '0');
+  return [hex.slice(0, 8), hex.slice(8, 12), hex.slice(12, 16), hex.slice(16, 20), hex.slice(20)].join('-');
+}
 
 /**
  * Super properties sent with every REST request (header `x-super-properties`) and in the gateway identify
  * payload. Key set, order and values follow the web client; keys carry no `$` prefix, Discord dropped the
- * old schema.
+ * old schema. A client takes its own copy from {@link createSuperProperties}.
  * @type {Object}
  */
 const DefaultSuperProperties = {
@@ -65,18 +110,30 @@ const DefaultSuperProperties = {
   client_event_source: null,
   // The web client draws both once per page load.
   client_launch_id: randomUUID(),
-  launch_signature: randomUUID(),
+  launch_signature: generateLaunchSignature(),
   client_app_state: 'unfocused',
 };
 
 /**
- * Gateway capabilities bitfield the web client identifies with, captured from a live session on
- * 2026-11-11. It selects the dispatch format Discord sends, so a stale value changes the payloads a
- * client receives.
+ * Super properties for one client, with a launch id and signature of its own. Clients that shared them
+ * would tell Discord that their accounts run in one process.
+ * @returns {Object}
+ */
+function createSuperProperties() {
+  return { ...DefaultSuperProperties, client_launch_id: randomUUID(), launch_signature: generateLaunchSignature() };
+}
+
+/**
+ * Gateway capabilities bitfield. It selects the dispatch format Discord sends, so a stale value changes
+ * the payloads a client receives.
+ *
+ * The web client identified with 1767421 in a live session on 2026-11-11. This is that value without
+ * `CHANNEL_OBFUSCATION` (`1 << 15`): with it Discord obfuscates every channel the user cannot view, and
+ * nothing here reads that format.
  * Tham khảo: https://docs.discord.food/topics/gateway#gateway-capabilities
  * @type {number}
  */
-const DefaultCapabilities = 1767421;
+const DefaultCapabilities = 1767421 & ~(1 << 15);
 
 /**
  * Client-side cache state sent with the identify. A fresh web client reports an empty guild version map
@@ -133,31 +190,12 @@ function encodeSuperProperties(properties) {
   return Buffer.from(JSON.stringify(normalizeSuperProperties(properties)), 'utf8').toString('base64');
 }
 
-/**
- * Reads the build number the live web client reports. Its app shell carries `window.GLOBAL_ENV`, which is
- * where the client itself takes `client_build_number` from, so this is the value Discord expects today.
- * @param {Function} [fetchImpl] Fetch implementation, defaults to the global one
- * @param {AbortSignal} [signal] Abort signal
- * @returns {Promise<number>}
- */
-async function fetchClientBuildNumber(fetchImpl = globalThis.fetch, signal = undefined) {
-  const response = await fetchImpl('https://discord.com/app', {
-    headers: { 'user-agent': DefaultUserAgent },
-    signal,
-  });
-  if (!response.ok) throw new Error(`Discord app shell returned HTTP ${response.status}`);
-
-  const buildNumber = /"BUILD_NUMBER":"(\d+)"/.exec(await response.text())?.[1];
-  if (!buildNumber) throw new Error('Discord app shell did not contain a build number');
-
-  return Number(buildNumber);
-}
-
 module.exports = {
   DefaultChromeVersion,
   DefaultUserAgent,
   DefaultSecChUa,
   DefaultClientBuildNumber,
+  ClientModBits,
   WebApiVersion,
   DefaultSuperProperties,
   DefaultCapabilities,
@@ -165,5 +203,7 @@ module.exports = {
   DefaultCiphers,
   normalizeSuperProperties,
   encodeSuperProperties,
-  fetchClientBuildNumber,
+  buildSecChUa,
+  generateLaunchSignature,
+  createSuperProperties,
 };

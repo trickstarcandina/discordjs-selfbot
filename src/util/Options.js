@@ -1,7 +1,7 @@
 'use strict';
 
 const { DefaultRestOptions, DefaultUserAgentAppendix } = require('@discordjs/rest');
-const { DefaultSuperProperties, DefaultCapabilities, DefaultClientState, WebApiVersion } = require('./SelfbotDefaults');
+const { createSuperProperties, DefaultCapabilities, DefaultClientState, WebApiVersion } = require('./SelfbotDefaults');
 const { toSnakeCase } = require('./Transformers');
 const { version } = require('../../package.json');
 
@@ -128,7 +128,7 @@ class Options extends null {
       ws: {
         large_threshold: 50,
         version: Number(WebApiVersion),
-        properties: { ...DefaultSuperProperties },
+        properties: createSuperProperties(),
         capabilities: DefaultCapabilities,
         client_state: { ...DefaultClientState },
         // Client điền ở constructor vì strategy cần tham chiếu tới client.

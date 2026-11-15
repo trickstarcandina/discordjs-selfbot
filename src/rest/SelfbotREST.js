@@ -4,11 +4,29 @@ const { REST, DefaultRestOptions } = require('@discordjs/rest');
 const { Agent, ProxyAgent, buildConnector } = require('undici');
 const {
   DefaultUserAgent,
-  DefaultSecChUa,
-  DefaultSuperProperties,
   DefaultCiphers,
+  buildSecChUa,
+  createSuperProperties,
   encodeSuperProperties,
 } = require('../util/SelfbotDefaults');
+
+/**
+ * Client hints for the browser the super properties name, so they can never disagree with the User-Agent.
+ * Only Chromium browsers send them; any other browser gets none.
+ * @param {Object} properties Super properties
+ * @returns {Object<string, string>}
+ */
+function buildClientHints(properties) {
+  // Shortcut: only Chrome is modelled, other Chromium brands (Edge, Opera) get no hints; add their brand names when one is needed.
+  if (properties.browser !== 'Chrome' || !properties.browser_version) return {};
+
+  return {
+    'sec-ch-ua': buildSecChUa(properties.browser_version),
+    'sec-ch-ua-mobile': '?0',
+    // Chrome names the platform `macOS`; the super properties call it `Mac OS X`.
+    'sec-ch-ua-platform': `"${properties.os === 'Mac OS X' ? 'macOS' : properties.os}"`,
+  };
+}
 
 /**
  * Header tĩnh mà Discord web client luôn gửi. Thiếu bộ này thì request
@@ -18,7 +36,7 @@ const {
  */
 function buildSelfbotHeaders(clientOptions) {
   // Fallback vì user có thể truyền `ws` partial.
-  const properties = clientOptions.ws?.properties ?? DefaultSuperProperties;
+  const properties = clientOptions.ws?.properties ?? createSuperProperties();
   const userAgent = properties.browser_user_agent ?? DefaultUserAgent;
 
   return {
@@ -27,9 +45,7 @@ function buildSelfbotHeaders(clientOptions) {
     origin: 'https://discord.com',
     priority: 'u=1, i',
     referer: 'https://discord.com/channels/@me',
-    'sec-ch-ua': DefaultSecChUa,
-    'sec-ch-ua-mobile': '?0',
-    'sec-ch-ua-platform': '"Windows"',
+    ...buildClientHints(properties),
     'sec-fetch-dest': 'empty',
     'sec-fetch-mode': 'cors',
     'sec-fetch-site': 'same-origin',
