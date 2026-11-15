@@ -8,23 +8,29 @@ const {
   buildSecChUa,
   createSuperProperties,
   encodeSuperProperties,
+  normalizeSuperProperties,
 } = require('../util/SelfbotDefaults');
 
 /**
- * Client hints for the browser the super properties name, so they can never disagree with the User-Agent.
- * Only Chromium browsers send them; any other browser gets none.
- * @param {Object} properties Super properties
+ * Client hints read off the User-Agent that goes out with them, so the two can never disagree.
+ * @param {string} userAgent User-Agent of the request
  * @returns {Object<string, string>}
  */
-function buildClientHints(properties) {
-  // Shortcut: only Chrome is modelled, other Chromium brands (Edge, Opera) get no hints; add their brand names when one is needed.
-  if (properties.browser !== 'Chrome' || !properties.browser_version) return {};
+function buildClientHints(userAgent) {
+  const major = /\bChrome\/(\d+)/.exec(userAgent)?.[1];
+  const platform = [
+    [/Windows NT/, 'Windows'],
+    [/Macintosh/, 'macOS'],
+    [/X11; Linux/, 'Linux'],
+  ].find(([token]) => token.test(userAgent))?.[1];
+
+  // Shortcut: only desktop Chrome is modelled, other Chromium brands (Edge, Opera) and mobile get no hints; add them when one is needed.
+  if (!major || !platform || /\b(?:Edg|OPR)\//.test(userAgent)) return {};
 
   return {
-    'sec-ch-ua': buildSecChUa(properties.browser_version),
+    'sec-ch-ua': buildSecChUa(major),
     'sec-ch-ua-mobile': '?0',
-    // Chrome names the platform `macOS`; the super properties call it `Mac OS X`.
-    'sec-ch-ua-platform': `"${properties.os === 'Mac OS X' ? 'macOS' : properties.os}"`,
+    'sec-ch-ua-platform': `"${platform}"`,
   };
 }
 
@@ -36,7 +42,7 @@ function buildClientHints(properties) {
  */
 function buildSelfbotHeaders(clientOptions) {
   // Fallback vì user có thể truyền `ws` partial.
-  const properties = clientOptions.ws?.properties ?? createSuperProperties();
+  const properties = normalizeSuperProperties(clientOptions.ws?.properties ?? createSuperProperties());
   const userAgent = properties.browser_user_agent ?? DefaultUserAgent;
 
   return {
@@ -45,7 +51,7 @@ function buildSelfbotHeaders(clientOptions) {
     origin: 'https://discord.com',
     priority: 'u=1, i',
     referer: 'https://discord.com/channels/@me',
-    ...buildClientHints(properties),
+    ...buildClientHints(userAgent),
     'sec-fetch-dest': 'empty',
     'sec-fetch-mode': 'cors',
     'sec-fetch-site': 'same-origin',

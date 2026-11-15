@@ -33,6 +33,7 @@ const DefaultUserAgent =
  */
 function buildSecChUa(chromeVersion) {
   const major = Number.parseInt(chromeVersion, 10);
+  if (Number.isNaN(major)) throw new RangeError(`Not a Chrome version: ${chromeVersion}`);
   const chars = [' ', '(', ':', '-', '.', '/', ')', ';', '=', '?', '_'];
   const grease = `"Not${chars[major % 11]}A${chars[(major + 1) % 11]}Brand";v="${['8', '99', '24'][major % 3]}"`;
 
@@ -88,7 +89,8 @@ function generateLaunchSignature(uuid = randomUUID()) {
 /**
  * Super properties sent with every REST request (header `x-super-properties`) and in the gateway identify
  * payload. Key set, order and values follow the web client; keys carry no `$` prefix, Discord dropped the
- * old schema. A client takes its own copy from {@link createSuperProperties}.
+ * old schema. It leaves out `client_launch_id` and `launch_signature`: a client draws its own in
+ * {@link createSuperProperties}, and a copy of this object must not carry one pair into every client.
  * @type {Object}
  */
 const DefaultSuperProperties = {
@@ -108,9 +110,6 @@ const DefaultSuperProperties = {
   release_channel: 'stable',
   client_build_number: DefaultClientBuildNumber,
   client_event_source: null,
-  // The web client draws both once per page load.
-  client_launch_id: randomUUID(),
-  launch_signature: generateLaunchSignature(),
   client_app_state: 'unfocused',
 };
 
@@ -120,7 +119,15 @@ const DefaultSuperProperties = {
  * @returns {Object}
  */
 function createSuperProperties() {
-  return { ...DefaultSuperProperties, client_launch_id: randomUUID(), launch_signature: generateLaunchSignature() };
+  const { client_app_state, ...properties } = DefaultSuperProperties;
+
+  // The web client draws both once per page load and sends them ahead of `client_app_state`.
+  return {
+    ...properties,
+    client_launch_id: randomUUID(),
+    launch_signature: generateLaunchSignature(),
+    client_app_state,
+  };
 }
 
 /**

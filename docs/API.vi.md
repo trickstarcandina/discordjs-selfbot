@@ -98,9 +98,11 @@ identify của gateway, User-Agent và client hint `sec-ch-ua` đều dựng t�
 new Client({ ws: { properties: { client_build_number: 673764 } } });
 ```
 
-Client hint chỉ được gửi khi `browser` là `Chrome`, và mang đúng bản Chrome ghi
-trong `browser_version`. Mỗi client tự sinh `client_launch_id` và
-`launch_signature` riêng.
+Client hint được đọc từ `browser_user_agent`, chính User-Agent gửi kèm, và chỉ
+được gửi khi User-Agent đó là Chrome trên desktop. Muốn khai browser hoặc nền
+tảng khác thì ghi đè cả `browser_user_agent`, `browser_version`, `os` và
+`os_version`: không key nào được suy ra từ key khác. Mỗi client tự sinh
+`client_launch_id` và `launch_signature` riêng.
 
 > Các giá trị danh tính mặc định trong `SelfbotDefaults.js` lấy theo một phiên
 > web client được ghi lại ngày 2026-11-11. Discord ra build mới gần như mỗi ngày,

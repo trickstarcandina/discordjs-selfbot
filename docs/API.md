@@ -101,9 +101,11 @@ from it. Override a single key and the rest keep their defaults:
 new Client({ ws: { properties: { client_build_number: 673764 } } });
 ```
 
-Client hints are sent only when `browser` is `Chrome`, and name the Chrome
-release in `browser_version`. Every client draws its own `client_launch_id` and
-`launch_signature`.
+Client hints are read off `browser_user_agent`, the User-Agent that goes out
+with them, and are sent only when it names desktop Chrome. To claim another
+browser or platform, override `browser_user_agent`, `browser_version`, `os` and
+`os_version` together: nothing derives one from another. Every client draws its
+own `client_launch_id` and `launch_signature`.
 
 > The identity defaults in `SelfbotDefaults.js` follow a web client session
 > captured on 2026-11-11. Discord ships a new build most days, so

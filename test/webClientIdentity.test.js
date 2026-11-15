@@ -13,10 +13,23 @@ const {
   DefaultSuperProperties,
   WebApiVersion,
   buildSecChUa,
+  createSuperProperties,
   generateLaunchSignature,
 } = require('../src/util/SelfbotDefaults.js');
 
-const options = { ws: { properties: DefaultSuperProperties }, http: { headers: {} } };
+const options = { ws: { properties: createSuperProperties() }, http: { headers: {} } };
+
+function userAgentOf(platform, browser) {
+  return `Mozilla/5.0 (${platform}) AppleWebKit/537.36 (KHTML, like Gecko) ${browser}`;
+}
+
+function clientHints(properties) {
+  const headers = buildSelfbotHeaders({
+    ...options,
+    ws: { properties: { ...createSuperProperties(), ...properties } },
+  });
+  return Object.fromEntries(Object.entries(headers).filter(([key]) => key.startsWith('sec-ch-ua')));
+}
 
 function superProperties(headers) {
   return JSON.parse(Buffer.from(headers['x-super-properties'], 'base64').toString('utf8'));
@@ -78,26 +91,66 @@ test('buildSecChUa reproduces the header real Chrome releases send', () => {
   assert.strictEqual(buildSecChUa('153.0.0.0'), '"Google Chrome";v="153", "Not_A Brand";v="8", "Chromium";v="153"');
 });
 
-test('client hints follow the Chrome version in ws.properties', () => {
-  const headers = buildSelfbotHeaders({
-    ...options,
-    ws: { properties: { ...DefaultSuperProperties, browser_version: '134.0.0.0', os: 'Mac OS X' } },
+test('client hints follow the User-Agent that is sent', () => {
+  const mac = clientHints({
+    browser_user_agent: userAgentOf('Macintosh; Intel Mac OS X 10_15_7', 'Chrome/134.0.0.0 Safari/537.36'),
   });
+  const linux = clientHints({ browser_user_agent: userAgentOf('X11; Linux x86_64', 'Chrome/140.0.0.0 Safari/537.36') });
 
-  assert.strictEqual(headers['sec-ch-ua'], buildSecChUa('134.0.0.0'));
-  assert.strictEqual(headers['sec-ch-ua-platform'], '"macOS"');
+  assert.strictEqual(mac['sec-ch-ua'], buildSecChUa('134.0.0.0'));
+  assert.strictEqual(mac['sec-ch-ua-platform'], '"macOS"');
+  assert.strictEqual(linux['sec-ch-ua'], buildSecChUa('140.0.0.0'));
+  assert.strictEqual(linux['sec-ch-ua-platform'], '"Linux"');
 });
 
-test('a browser that is not Chrome sends no client hints', () => {
-  const headers = buildSelfbotHeaders({
-    ...options,
-    ws: { properties: { ...DefaultSuperProperties, browser: 'Firefox', browser_version: '140.0' } },
-  });
+test('overriding one super property cannot set client hints against the User-Agent', () => {
+  // The User-Agent still names Chrome 153 on Windows, so the hints must too.
+  const hints = clientHints({ os: 'Mac OS X', browser_version: '134.0.0.0', browser: 'Firefox' });
 
-  assert.deepStrictEqual(
-    Object.keys(headers).filter(key => key.startsWith('sec-ch-ua')),
-    [],
-  );
+  assert.strictEqual(hints['sec-ch-ua'], buildSecChUa(DefaultChromeVersion));
+  assert.strictEqual(hints['sec-ch-ua-platform'], '"Windows"');
+});
+
+test('a User-Agent that is not desktop Chrome sends no client hints', () => {
+  const firefox = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0';
+  const edge = userAgentOf('Windows NT 10.0; Win64; x64', 'Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0');
+  const android = userAgentOf('Linux; Android 10; K', 'Chrome/140.0.0.0 Mobile Safari/537.36');
+
+  for (const browser_user_agent of [firefox, edge, android]) {
+    assert.deepStrictEqual(clientHints({ browser_user_agent }), {});
+  }
+});
+
+test('a legacy $-prefixed User-Agent reaches the header and the client hints', () => {
+  const BaseClient = require('../src/client/BaseClient.js');
+  const userAgent = userAgentOf('X11; Linux x86_64', 'Chrome/140.0.0.0 Safari/537.36');
+  const client = new BaseClient({ ws: { properties: { $browser_user_agent: userAgent } } });
+  const headers = client.rest.options.headers;
+
+  assert.strictEqual(headers['user-agent'], userAgent);
+  assert.strictEqual(superProperties(headers).browser_user_agent, userAgent);
+  assert.strictEqual(headers['sec-ch-ua'], buildSecChUa('140.0.0.0'));
+  client.destroy();
+});
+
+test('a browser_version that is not a version does not break the client', () => {
+  const BaseClient = require('../src/client/BaseClient.js');
+
+  assert.throws(() => buildSecChUa('latest'), { name: 'RangeError', message: /latest/ });
+  new BaseClient({ ws: { properties: { browser_version: 'latest' } } }).destroy();
+});
+
+test('spreading DefaultSuperProperties keeps the launch id and signature per client', () => {
+  const BaseClient = require('../src/client/BaseClient.js');
+  const create = () => new BaseClient({ ws: { properties: { ...DefaultSuperProperties, os: 'Linux' } } });
+  const [first, second] = [create(), create()];
+
+  assert.ok(!('client_launch_id' in DefaultSuperProperties));
+  assert.ok(!('launch_signature' in DefaultSuperProperties));
+  assert.notStrictEqual(first.options.ws.properties.client_launch_id, second.options.ws.properties.client_launch_id);
+  assert.notStrictEqual(first.options.ws.properties.launch_signature, second.options.ws.properties.launch_signature);
+  first.destroy();
+  second.destroy();
 });
 
 function uuidBits(uuid) {
