@@ -200,81 +200,81 @@ mention them at all — absence there means untested, not passing.
 
 | Suite       | PASS | FAIL | SKIP |
 | ----------- | ---- | ---- | ---- |
-| write       | 15   | 0    | 5    |
 | readonly    | 16   | 0    | 0    |
+| write       | 18   | 1    | 1    |
 | message     | 16   | 0    | 0    |
+| voice       | 5    | 0    | 0    |
 | interaction | 2    | 0    | 2    |
 | groupdm     | 8    | 0    | 0    |
-| voice       | 5    | 0    | 0    |
 
 | Date             | Suite       | Check                                                   | Result |
 | ---------------- | ----------- | ------------------------------------------------------- | ------ |
-| 2026-08-04 04:49 | write       | user.setAboutMe()                                       | SKIP   |
-| 2026-08-04 04:49 | write       | user.setPronouns()                                      | SKIP   |
-| 2026-08-04 04:49 | write       | user.setGlobalName()                                    | SKIP   |
-| 2026-08-04 04:49 | write       | user.setAccentColor()                                   | SKIP   |
-| 2026-08-04 04:49 | write       | settings.setTheme()                                     | PASS   |
-| 2026-08-04 04:49 | write       | settings.toggleCompactMode()                            | PASS   |
-| 2026-08-04 04:49 | write       | settings.setCustomStatus()                              | PASS   |
-| 2026-08-04 04:49 | write       | notes.updateNote()                                      | PASS   |
-| 2026-08-04 04:49 | write       | relationships.setNickname()                             | PASS   |
-| 2026-08-04 04:49 | write       | user.createFriendInvite() + revokeAllFriendInvites()    | PASS   |
-| 2026-08-04 04:49 | write       | setPresence(CustomStatus)                               | PASS   |
-| 2026-08-04 04:49 | write       | setPresence(RichPresence)                               | PASS   |
-| 2026-08-04 04:49 | write       | setPresence(SpotifyRPC)                                 | PASS   |
-| 2026-08-04 04:49 | write       | setPresence(clear)                                      | PASS   |
-| 2026-08-04 04:49 | write       | settings.addRestrictedGuild() + removeRestrictedGuild() | PASS   |
-| 2026-08-04 04:49 | write       | guild.settings.edit()                                   | PASS   |
-| 2026-08-04 04:49 | write       | RichPresence.getExternal()                              | PASS   |
-| 2026-08-04 04:49 | write       | gateway day nguoc packet cua cac thao tac vua ghi       | PASS   |
-| 2026-08-04 04:49 | write       | handler emit event tuong ung                            | PASS   |
-| 2026-08-04 04:49 | write       | setting tai khoan dong bo nguoc qua gateway             | SKIP   |
-| 2026-08-04 04:56 | readonly    | ready + client.user                                     | PASS   |
-| 2026-08-04 04:56 | readonly    | relationships from READY                                | PASS   |
-| 2026-08-04 04:56 | readonly    | guilds from READY                                       | PASS   |
-| 2026-08-04 04:56 | readonly    | user_guild_settings patched onto Guild                  | PASS   |
-| 2026-08-04 04:56 | readonly    | settings.fetch()                                        | PASS   |
-| 2026-08-04 04:56 | readonly    | sessions.fetch()                                        | PASS   |
-| 2026-08-04 04:56 | readonly    | notes.fetch(first friend)                               | PASS   |
-| 2026-08-04 04:56 | readonly    | users.fetch(self, force)                                | PASS   |
-| 2026-08-04 04:56 | readonly    | billing.fetchPaymentSources()                           | PASS   |
-| 2026-08-04 04:56 | readonly    | billing.fetchGuildBoosts()                              | PASS   |
-| 2026-08-04 04:56 | readonly    | billing.fetchCurrentSubscription()                      | PASS   |
-| 2026-08-04 04:56 | readonly    | user.fetchFriendInvites()                               | PASS   |
-| 2026-08-04 04:56 | readonly    | authorizedApplications()                                | PASS   |
-| 2026-08-04 04:56 | readonly    | channel.searchApplicationCommands()                     | PASS   |
-| 2026-08-04 04:56 | readonly    | users.fetch(friend, force)                              | PASS   |
-| 2026-08-04 04:56 | readonly    | relationships.fetch(user)                               | PASS   |
-| 2026-08-04 04:56 | message     | channel.send()                                          | PASS   |
-| 2026-08-04 04:56 | message     | messages.fetch()                                        | PASS   |
-| 2026-08-04 04:56 | message     | message.edit()                                          | PASS   |
-| 2026-08-04 04:56 | message     | message.reply()                                         | PASS   |
-| 2026-08-04 04:56 | message     | message.react() + go reaction                           | PASS   |
-| 2026-08-04 04:56 | message     | channel.sendTyping()                                    | PASS   |
-| 2026-08-04 04:56 | message     | message.pin() + unpin()                                 | PASS   |
-| 2026-08-04 04:56 | message     | send kem file dinh kem                                  | PASS   |
-| 2026-08-04 04:56 | message     | awaitMessages()                                         | PASS   |
-| 2026-08-04 04:56 | message     | WebEmbed link duoc Discord unfurl                       | PASS   |
-| 2026-08-04 04:56 | message     | message.delete()                                        | PASS   |
-| 2026-08-04 04:56 | message     | refreshAttachmentURL()                                  | PASS   |
-| 2026-08-04 04:56 | message     | channel.setName()                                       | PASS   |
-| 2026-08-04 04:56 | message     | channel.setIcon()                                       | PASS   |
-| 2026-08-04 04:56 | message     | createInvite() + fetchInvites() + deleteInvite()        | PASS   |
-| 2026-08-04 04:56 | message     | channel.delete()                                        | PASS   |
-| 2026-08-04 10:50 | interaction | searchApplicationCommands() liet ke lenh that           | PASS   |
-| 2026-08-04 10:50 | interaction | channel.sendSlash()                                     | PASS   |
-| 2026-08-04 10:50 | interaction | message.clickButton()                                   | SKIP   |
-| 2026-08-04 10:50 | interaction | message.selectMenu()                                    | SKIP   |
-| 2026-08-04 11:21 | groupdm     | channel.addUser()                                       | PASS   |
-| 2026-08-04 11:21 | groupdm     | channel.fetchOwner()                                    | PASS   |
-| 2026-08-04 11:21 | groupdm     | CallState.setRTCRegion()                                | PASS   |
-| 2026-08-04 11:21 | groupdm     | user.stopRinging()                                      | PASS   |
-| 2026-08-04 11:21 | groupdm     | channel.removeUser()                                    | PASS   |
-| 2026-08-04 11:21 | groupdm     | mo cuoc goi bang voice state update + callCreate        | PASS   |
-| 2026-08-04 11:21 | groupdm     | channel.ring() + callUpdate                             | PASS   |
-| 2026-08-04 11:21 | groupdm     | roi cuoc goi + callDelete                               | PASS   |
-| 2026-08-05 09:19 | voice       | voice.joinChannel()                                     | PASS   |
-| 2026-08-05 09:19 | voice       | connection.playAudio()                                  | PASS   |
-| 2026-08-05 09:19 | voice       | connection.createStreamConnection()                     | PASS   |
-| 2026-08-05 09:19 | voice       | receiver.createStream()                                 | PASS   |
-| 2026-08-05 09:19 | voice       | connection.disconnect()                                 | PASS   |
+| 2026-11-16 07:40 | readonly    | ready + client.user                                     | PASS   |
+| 2026-11-16 07:40 | readonly    | relationships from READY                                | PASS   |
+| 2026-11-16 07:40 | readonly    | guilds from READY                                       | PASS   |
+| 2026-11-16 07:40 | readonly    | user_guild_settings patched onto Guild                  | PASS   |
+| 2026-11-16 07:40 | readonly    | settings.fetch()                                        | PASS   |
+| 2026-11-16 07:40 | readonly    | sessions.fetch()                                        | PASS   |
+| 2026-11-16 07:40 | readonly    | notes.fetch(first friend)                               | PASS   |
+| 2026-11-16 07:40 | readonly    | users.fetch(self, force)                                | PASS   |
+| 2026-11-16 07:40 | readonly    | users.fetch(friend, force)                              | PASS   |
+| 2026-11-16 07:40 | readonly    | relationships.fetch(user)                               | PASS   |
+| 2026-11-16 07:40 | readonly    | billing.fetchPaymentSources()                           | PASS   |
+| 2026-11-16 07:40 | readonly    | billing.fetchGuildBoosts()                              | PASS   |
+| 2026-11-16 07:40 | readonly    | billing.fetchCurrentSubscription()                      | PASS   |
+| 2026-11-16 07:40 | readonly    | user.fetchFriendInvites()                               | PASS   |
+| 2026-11-16 07:40 | readonly    | authorizedApplications()                                | PASS   |
+| 2026-11-16 07:40 | readonly    | channel.searchApplicationCommands()                     | PASS   |
+| 2026-11-16 07:48 | write       | user.setAboutMe()                                       | PASS   |
+| 2026-11-16 07:48 | write       | user.setPronouns()                                      | FAIL   |
+| 2026-11-16 07:48 | write       | user.setGlobalName()                                    | PASS   |
+| 2026-11-16 07:48 | write       | user.setAccentColor()                                   | PASS   |
+| 2026-11-16 07:48 | write       | settings.setTheme()                                     | PASS   |
+| 2026-11-16 07:48 | write       | settings.toggleCompactMode()                            | PASS   |
+| 2026-11-16 07:48 | write       | settings.setCustomStatus()                              | PASS   |
+| 2026-11-16 07:48 | write       | notes.updateNote()                                      | PASS   |
+| 2026-11-16 07:48 | write       | relationships.setNickname()                             | PASS   |
+| 2026-11-16 07:48 | write       | settings.addRestrictedGuild() + removeRestrictedGuild() | PASS   |
+| 2026-11-16 07:48 | write       | guild.settings.edit()                                   | PASS   |
+| 2026-11-16 07:48 | write       | user.createFriendInvite() + revokeAllFriendInvites()    | PASS   |
+| 2026-11-16 07:48 | write       | setPresence(CustomStatus)                               | PASS   |
+| 2026-11-16 07:48 | write       | setPresence(RichPresence)                               | PASS   |
+| 2026-11-16 07:48 | write       | setPresence(SpotifyRPC)                                 | PASS   |
+| 2026-11-16 07:48 | write       | setPresence(clear)                                      | PASS   |
+| 2026-11-16 07:48 | write       | RichPresence.getExternal()                              | PASS   |
+| 2026-11-16 07:48 | write       | gateway day nguoc packet cua cac thao tac vua ghi       | PASS   |
+| 2026-11-16 07:48 | write       | setting tai khoan dong bo nguoc qua gateway             | SKIP   |
+| 2026-11-16 07:48 | write       | handler emit event tuong ung                            | PASS   |
+| 2026-11-16 07:52 | message     | channel.send()                                          | PASS   |
+| 2026-11-16 07:52 | message     | messages.fetch()                                        | PASS   |
+| 2026-11-16 07:52 | message     | message.edit()                                          | PASS   |
+| 2026-11-16 07:52 | message     | message.reply()                                         | PASS   |
+| 2026-11-16 07:52 | message     | message.react() + go reaction                           | PASS   |
+| 2026-11-16 07:52 | message     | channel.sendTyping()                                    | PASS   |
+| 2026-11-16 07:52 | message     | message.pin() + unpin()                                 | PASS   |
+| 2026-11-16 07:52 | message     | send kem file dinh kem                                  | PASS   |
+| 2026-11-16 07:52 | message     | refreshAttachmentURL()                                  | PASS   |
+| 2026-11-16 07:52 | message     | awaitMessages()                                         | PASS   |
+| 2026-11-16 07:52 | message     | WebEmbed link duoc Discord unfurl                       | PASS   |
+| 2026-11-16 07:52 | message     | message.delete()                                        | PASS   |
+| 2026-11-16 07:52 | message     | channel.setName()                                       | PASS   |
+| 2026-11-16 07:52 | message     | channel.setIcon()                                       | PASS   |
+| 2026-11-16 07:52 | message     | createInvite() + fetchInvites() + deleteInvite()        | PASS   |
+| 2026-11-16 07:52 | message     | channel.delete()                                        | PASS   |
+| 2026-11-16 07:54 | voice       | voice.joinChannel()                                     | PASS   |
+| 2026-11-16 07:54 | voice       | connection.playAudio()                                  | PASS   |
+| 2026-11-16 07:54 | voice       | connection.createStreamConnection()                     | PASS   |
+| 2026-11-16 07:54 | voice       | receiver.createStream()                                 | PASS   |
+| 2026-11-16 07:54 | voice       | connection.disconnect()                                 | PASS   |
+| 2026-11-16 07:55 | interaction | searchApplicationCommands() liet ke lenh that           | PASS   |
+| 2026-11-16 07:55 | interaction | channel.sendSlash()                                     | PASS   |
+| 2026-11-16 07:55 | interaction | message.clickButton()                                   | SKIP   |
+| 2026-11-16 07:55 | interaction | message.selectMenu()                                    | SKIP   |
+| 2026-11-16 07:57 | groupdm     | channel.addUser()                                       | PASS   |
+| 2026-11-16 07:57 | groupdm     | channel.fetchOwner()                                    | PASS   |
+| 2026-11-16 07:57 | groupdm     | mo cuoc goi bang voice state update + callCreate        | PASS   |
+| 2026-11-16 07:57 | groupdm     | channel.ring() + callUpdate                             | PASS   |
+| 2026-11-16 07:57 | groupdm     | CallState.setRTCRegion()                                | PASS   |
+| 2026-11-16 07:57 | groupdm     | user.stopRinging()                                      | PASS   |
+| 2026-11-16 07:57 | groupdm     | roi cuoc goi + callDelete                               | PASS   |
+| 2026-11-16 07:57 | groupdm     | channel.removeUser()                                    | PASS   |
