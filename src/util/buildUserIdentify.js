@@ -17,12 +17,12 @@ const { normalizeSuperProperties } = require('./SelfbotDefaults');
  * @returns {Object} payload `d` của op 2
  */
 function buildUserIdentify({ token, properties, capabilities, clientState, presence }) {
+  // The web client sends no `compress` key at all; transport compression is negotiated in the gateway URL.
   const data = {
     token,
     capabilities,
     properties: normalizeSuperProperties(properties),
     client_state: clientState,
-    compress: false,
   };
 
   if (presence) data.presence = presence;

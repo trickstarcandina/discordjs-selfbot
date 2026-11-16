@@ -38,6 +38,8 @@ class BaseClient extends EventEmitter {
       ws: {
         ...defaultOptions.ws,
         ...options.ws,
+        // Merged per key: overriding one super property must not drop the rest of the identity.
+        properties: { ...defaultOptions.ws.properties, ...options.ws?.properties },
       },
       rest: {
         ...defaultOptions.rest,

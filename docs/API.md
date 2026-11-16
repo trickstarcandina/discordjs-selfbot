@@ -70,8 +70,8 @@ new Client({
   captchaRetryLimit?: number;              // default 3
   autoAcceptAgreements?: boolean;          // default false
   ws?: {
-    properties?: Record<string, unknown>;  // identify super-properties
-    capabilities?: number;                 // default 161789
+    properties?: Record<string, unknown>;  // super-properties, merged over the defaults per key
+    capabilities?: number;                 // default 1734653
     client_state?: Record<string, unknown>;
   };
 });
@@ -90,10 +90,29 @@ const client = new Client({
 `autoAcceptAgreements` accepts new Terms of Service on the account owner's
 behalf, which is a legal act, so it is **off by default** (v13 did it silently).
 
-> The defaults in `SelfbotDefaults.js` — `client_build_number`, `capabilities`,
-> the user agent, the TLS cipher list — came from the v13 fork and are
-> **unverified** against today's Discord. They are the first thing to check if
-> logins start getting flagged.
+REST and the gateway both talk API **v9**, the version the web client uses (the
+bot default is v10). Pass `rest.version` and `ws.version` to change it.
+
+`ws.properties` is the one identity: the `x-super-properties` header, the
+gateway identify, the User-Agent and the `sec-ch-ua` client hints are all built
+from it. Override a single key and the rest keep their defaults:
+
+```js
+new Client({ ws: { properties: { client_build_number: 673764 } } });
+```
+
+Client hints are read off `browser_user_agent`, the User-Agent that goes out
+with them, and are sent only when it names desktop Chrome. To claim another
+browser or platform, override `browser_user_agent`, `browser_version`, `os` and
+`os_version` together: nothing derives one from another. Every client draws its
+own `client_launch_id` and `launch_signature`.
+
+> The identity defaults in `SelfbotDefaults.js` follow a web client session
+> captured on 2026-11-11. Discord ships a new build most days, so
+> `client_build_number` goes stale first — it is the first thing to check if
+> logins start getting flagged. `capabilities` is the captured value without
+> `CHANNEL_OBFUSCATION` (`1 << 15`), which the library does not read. The TLS
+> cipher list came from the v13 fork and is still **unverified**.
 
 Example: [`examples/Proxy.js`](../examples/Proxy.js)
 

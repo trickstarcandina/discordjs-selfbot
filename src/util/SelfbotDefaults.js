@@ -1,58 +1,154 @@
 'use strict';
 
 const { Buffer } = require('node:buffer');
+const { randomUUID } = require('node:crypto');
 
 /**
- * User-Agent giả lập Discord desktop app. Phải khớp với `browser_user_agent`
- * trong super properties, nếu không Discord sẽ đánh dấu request bất thường.
+ * Chrome release the client claims. Every place that names a version must name this one: the User-Agent,
+ * `browser_version`, and the `sec-ch-ua` client hints. Discord compares them.
+ * @type {string}
+ */
+const DefaultChromeVersion = '153.0.0.0';
+
+/**
+ * API version the Discord web client talks. User-only endpoints live here; the bot default is v10.
+ * @type {string}
+ */
+const WebApiVersion = '9';
+
+/**
+ * User-Agent of the Discord web client in Chrome on Windows.
  * @type {string}
  */
 const DefaultUserAgent =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) ' +
-  'Chrome/134.0.0.0 Safari/537.36';
+  `Chrome/${DefaultChromeVersion} Safari/537.36`;
 
 /**
- * Super properties gửi kèm mọi request REST (header `x-super-properties`)
- * và trong payload identify của gateway. Key KHÔNG có tiền tố `$` —
- * schema cũ dùng `$os`, Discord đã bỏ.
+ * Builds `sec-ch-ua` the way Chrome does. The GREASE brand, its version and the order of the three brands
+ * all derive from the major version (Chromium `GetGreasedUserAgentBrandVersion`), so a header copied from
+ * another release names a brand this release never sends.
+ * @param {string} chromeVersion Chrome version, e.g. `153.0.0.0`
+ * @returns {string}
+ */
+function buildSecChUa(chromeVersion) {
+  const major = Number.parseInt(chromeVersion, 10);
+  if (Number.isNaN(major)) throw new RangeError(`Not a Chrome version: ${chromeVersion}`);
+  const chars = [' ', '(', ':', '-', '.', '/', ')', ';', '=', '?', '_'];
+  const grease = `"Not${chars[major % 11]}A${chars[(major + 1) % 11]}Brand";v="${['8', '99', '24'][major % 3]}"`;
+
+  // Slot of the GREASE brand, of Chromium and of the real brand.
+  const order = [
+    [0, 1, 2],
+    [0, 2, 1],
+    [1, 0, 2],
+    [1, 2, 0],
+    [2, 0, 1],
+    [2, 1, 0],
+  ][major % 6];
+  const brands = [];
+  brands[order[0]] = grease;
+  brands[order[1]] = `"Chromium";v="${major}"`;
+  brands[order[2]] = `"Google Chrome";v="${major}"`;
+  return brands.join(', ');
+}
+
+/**
+ * `sec-ch-ua` of the default Chrome release.
+ * @type {string}
+ */
+const DefaultSecChUa = buildSecChUa(DefaultChromeVersion);
+
+/**
+ * Build number of the Discord web client, read from its app shell on 2026-11-15. Discord ships a new build
+ * most days and reports it on every request; pass `ws.properties.client_build_number` to use a newer one.
+ * @type {number}
+ */
+const DefaultClientBuildNumber = 673764;
+
+/**
+ * Bits of the launch signature the web client sets when it detects a client mod (BetterDiscord, Vencord
+ * and others). An unmodified client sends them all as zero.
+ * Reference: https://docs.discord.food/reference#launch-signature
+ * @type {number[]}
+ */
+const ClientModBits = [119, 108, 100, 91, 84, 75, 61, 55, 48, 38, 24, 11];
+
+/**
+ * Draws a launch signature: a random UUID with every client mod bit cleared. A plain random UUID leaves
+ * those bits random and so reports a client mod, against `has_client_mods: false`.
+ * @param {string} [uuid] UUID to derive the signature from
+ * @returns {string}
+ */
+function generateLaunchSignature(uuid = randomUUID()) {
+  const mask = ClientModBits.reduce((bits, bit) => bits | (1n << BigInt(bit)), 0n);
+  const hex = (BigInt(`0x${uuid.replaceAll('-', '')}`) & ~mask).toString(16).padStart(32, '0');
+  return [hex.slice(0, 8), hex.slice(8, 12), hex.slice(12, 16), hex.slice(16, 20), hex.slice(20)].join('-');
+}
+
+/**
+ * Super properties sent with every REST request (header `x-super-properties`) and in the gateway identify
+ * payload. Key set, order and values follow the web client; keys carry no `$` prefix, Discord dropped the
+ * old schema. It leaves out `client_launch_id` and `launch_signature`: a client draws its own in
+ * {@link createSuperProperties}, and a copy of this object must not carry one pair into every client.
  * @type {Object}
  */
 const DefaultSuperProperties = {
   os: 'Windows',
   browser: 'Chrome',
   device: '',
+  device_model_name: '',
   system_locale: 'en-US',
+  has_client_mods: false,
   browser_user_agent: DefaultUserAgent,
-  browser_version: '134.0.0.0',
+  browser_version: DefaultChromeVersion,
   os_version: '10',
   referrer: '',
   referring_domain: '',
   referrer_current: '',
   referring_domain_current: '',
   release_channel: 'stable',
-  client_build_number: 384477,
+  client_build_number: DefaultClientBuildNumber,
   client_event_source: null,
+  client_app_state: 'unfocused',
 };
 
 /**
- * Gateway capabilities bitfield.
+ * Super properties for one client, with a launch id and signature of its own. Clients that shared them
+ * would tell Discord that their accounts run in one process.
+ * @returns {Object}
+ */
+function createSuperProperties() {
+  const { client_app_state, ...properties } = DefaultSuperProperties;
+
+  // The web client draws both once per page load and sends them ahead of `client_app_state`.
+  return {
+    ...properties,
+    client_launch_id: randomUUID(),
+    launch_signature: generateLaunchSignature(),
+    client_app_state,
+  };
+}
+
+/**
+ * Gateway capabilities bitfield. It selects the dispatch format Discord sends, so a stale value changes
+ * the payloads a client receives.
+ *
+ * The web client identified with 1767421 in a live session on 2026-11-11. This is that value without
+ * `CHANNEL_OBFUSCATION` (`1 << 15`): with it Discord obfuscates every channel the user cannot view, and
+ * nothing here reads that format.
  * Tham khảo: https://docs.discord.food/topics/gateway#gateway-capabilities
  * @type {number}
  */
-const DefaultCapabilities = 161789;
+const DefaultCapabilities = 1767421 & ~(1 << 15);
 
 /**
- * Trạng thái cache phía client gửi kèm identify. Client mới thì rỗng hết.
+ * Client-side cache state sent with the identify. A fresh web client reports an empty guild version map
+ * and nothing else; the older seven-field shape no longer matches what the client sends.
  * @type {Object}
  */
 const DefaultClientState = {
   guild_versions: {},
-  highest_last_message_id: '0',
-  read_state_version: 0,
-  user_guild_settings_version: -1,
-  user_settings_version: -1,
-  private_channels_version: '0',
-  api_code_version: 0,
 };
 
 /**
@@ -102,11 +198,19 @@ function encodeSuperProperties(properties) {
 }
 
 module.exports = {
+  DefaultChromeVersion,
   DefaultUserAgent,
+  DefaultSecChUa,
+  DefaultClientBuildNumber,
+  ClientModBits,
+  WebApiVersion,
   DefaultSuperProperties,
   DefaultCapabilities,
   DefaultClientState,
   DefaultCiphers,
   normalizeSuperProperties,
   encodeSuperProperties,
+  buildSecChUa,
+  generateLaunchSignature,
+  createSuperProperties,
 };

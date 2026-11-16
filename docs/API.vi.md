@@ -67,8 +67,8 @@ new Client({
   captchaRetryLimit?: number;              // mặc định 3
   autoAcceptAgreements?: boolean;          // mặc định false
   ws?: {
-    properties?: Record<string, unknown>;  // super-properties trong identify
-    capabilities?: number;                 // mặc định 161789
+    properties?: Record<string, unknown>;  // super-properties, trộn đè lên mặc định theo từng key
+    capabilities?: number;                 // mặc định 1734653
     client_state?: Record<string, unknown>;
   };
 });
@@ -87,10 +87,29 @@ const client = new Client({
 `autoAcceptAgreements` tự chấp nhận Điều khoản dịch vụ mới nhân danh chủ tài
 khoản — đó là hành động pháp lý, nên **mặc định tắt** (bản v13 làm im lặng).
 
-> Các giá trị mặc định trong `SelfbotDefaults.js` — `client_build_number`,
-> `capabilities`, user agent, danh sách cipher TLS — lấy từ bản v13 và **chưa
-> được kiểm chứng** với Discord hiện tại. Nếu tài khoản bắt đầu bị gắn cờ, đây là
-> chỗ kiểm tra đầu tiên.
+REST và gateway đều dùng API **v9**, phiên bản mà web client dùng (mặc định của
+bot là v10). Truyền `rest.version` và `ws.version` để đổi.
+
+`ws.properties` là danh tính duy nhất: header `x-super-properties`, payload
+identify của gateway, User-Agent và client hint `sec-ch-ua` đều dựng từ nó. Ghi
+đè một key thì các key còn lại giữ mặc định:
+
+```js
+new Client({ ws: { properties: { client_build_number: 673764 } } });
+```
+
+Client hint được đọc từ `browser_user_agent`, chính User-Agent gửi kèm, và chỉ
+được gửi khi User-Agent đó là Chrome trên desktop. Muốn khai browser hoặc nền
+tảng khác thì ghi đè cả `browser_user_agent`, `browser_version`, `os` và
+`os_version`: không key nào được suy ra từ key khác. Mỗi client tự sinh
+`client_launch_id` và `launch_signature` riêng.
+
+> Các giá trị danh tính mặc định trong `SelfbotDefaults.js` lấy theo một phiên
+> web client được ghi lại ngày 2026-11-11. Discord ra build mới gần như mỗi ngày,
+> nên `client_build_number` cũ đi trước tiên — nếu tài khoản bắt đầu bị gắn cờ,
+> đây là chỗ kiểm tra đầu tiên. `capabilities` là giá trị ghi lại được, bỏ
+> `CHANNEL_OBFUSCATION` (`1 << 15`) vì thư viện không đọc định dạng đó. Danh sách
+> cipher TLS lấy từ bản v13 và vẫn **chưa được kiểm chứng**.
 
 Ví dụ: [`examples/Proxy.js`](../examples/Proxy.js)
 

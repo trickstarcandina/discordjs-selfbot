@@ -4,10 +4,35 @@ const { REST, DefaultRestOptions } = require('@discordjs/rest');
 const { Agent, ProxyAgent, buildConnector } = require('undici');
 const {
   DefaultUserAgent,
-  DefaultSuperProperties,
   DefaultCiphers,
+  buildSecChUa,
+  createSuperProperties,
   encodeSuperProperties,
+  normalizeSuperProperties,
 } = require('../util/SelfbotDefaults');
+
+/**
+ * Client hints read off the User-Agent that goes out with them, so the two can never disagree.
+ * @param {string} userAgent User-Agent of the request
+ * @returns {Object<string, string>}
+ */
+function buildClientHints(userAgent) {
+  const major = /\bChrome\/(\d+)/.exec(userAgent)?.[1];
+  const platform = [
+    [/Windows NT/, 'Windows'],
+    [/Macintosh/, 'macOS'],
+    [/X11; Linux/, 'Linux'],
+  ].find(([token]) => token.test(userAgent))?.[1];
+
+  // Shortcut: only desktop Chrome is modelled, other Chromium brands (Edge, Opera) and mobile get no hints; add them when one is needed.
+  if (!major || !platform || /\b(?:Edg|OPR)\//.test(userAgent)) return {};
+
+  return {
+    'sec-ch-ua': buildSecChUa(major),
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': `"${platform}"`,
+  };
+}
 
 /**
  * Header tĩnh mà Discord web client luôn gửi. Thiếu bộ này thì request
@@ -17,18 +42,16 @@ const {
  */
 function buildSelfbotHeaders(clientOptions) {
   // Fallback vì user có thể truyền `ws` partial.
-  const properties = clientOptions.ws?.properties ?? DefaultSuperProperties;
+  const properties = normalizeSuperProperties(clientOptions.ws?.properties ?? createSuperProperties());
   const userAgent = properties.browser_user_agent ?? DefaultUserAgent;
 
   return {
     accept: '*/*',
-    'accept-language': 'en-US',
+    'accept-language': 'en-US,en;q=0.9',
     origin: 'https://discord.com',
     priority: 'u=1, i',
     referer: 'https://discord.com/channels/@me',
-    'sec-ch-ua': '"Not:A-Brand";v="24", "Chromium";v="134"',
-    'sec-ch-ua-mobile': '?0',
-    'sec-ch-ua-platform': '"Windows"',
+    ...buildClientHints(userAgent),
     'sec-fetch-dest': 'empty',
     'sec-fetch-mode': 'cors',
     'sec-fetch-site': 'same-origin',
@@ -86,6 +109,19 @@ function rewriteUserAgent(headers, userAgent) {
   }
 
   headers['user-agent'] = userAgent;
+  return headers;
+}
+
+/**
+ * Removes the `Origin` header. A browser omits it on same-origin GET requests, so sending it there marks
+ * the request as scripted.
+ * @param {Object} headers Header của request
+ * @returns {Object} chính object headers đã sửa
+ */
+function removeOrigin(headers) {
+  for (const key of Object.keys(headers)) {
+    if (key.toLowerCase() === 'origin') delete headers[key];
+  }
   return headers;
 }
 
@@ -202,6 +238,8 @@ function createSelfbotREST(clientOptions) {
       }
       if (token) rewriteAuthorization(init.headers, token);
       rewriteUserAgent(init.headers, userAgent);
+      // Chrome sends Origin only where the fetch spec asks for it, never on a same-origin GET.
+      if (init.method === undefined || init.method.toUpperCase() === 'GET') removeOrigin(init.headers);
 
       const send = requestInit => DefaultRestOptions.makeRequest(url, { ...requestInit, dispatcher });
 
@@ -252,6 +290,7 @@ module.exports = {
   buildSelfbotHeaders,
   rewriteAuthorization,
   rewriteUserAgent,
+  removeOrigin,
   buildDispatcher,
   makeGatewayBotResponse,
 };

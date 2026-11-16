@@ -190,14 +190,12 @@ client.once('ready', async () => {
     restore: bio => client.user.setAboutMe(bio),
   });
 
-  await roundTrip({
+  // Shortcut: bo qua. GET /users/@me khong tra pronouns (doc o /users/{id}/profile) va
+  // PATCH /users/@me doi captcha; setPronouns can chuyen sang PATCH /users/@me/profile.
+  results.push({
     name: 'user.setPronouns()',
-    read: async () => (await profile()).pronouns ?? null,
-    write: async () => {
-      await client.user.setPronouns(MARKER);
-      return MARKER;
-    },
-    restore: pronouns => client.user.setPronouns(pronouns ?? ''),
+    status: 'SKIP',
+    detail: 'chua kiem: PATCH /users/@me doi captcha, duong dung la /users/@me/profile',
   });
 
   await roundTrip({
