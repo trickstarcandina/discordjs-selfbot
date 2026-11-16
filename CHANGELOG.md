@@ -3,6 +3,72 @@
 Every entry below was found by running the library against a real Discord account,
 not by reading code. Where a claim is not proven, it says so.
 
+## 0.5.0
+
+The web client identity now matches what the Discord web client sends, as
+observed on `discord.com/app` (build `673764`, Chrome 153). Nothing is copied
+from a fixed list: the `User-Agent`, the `sec-ch-ua*` client hints and
+`x-super-properties` all name the same browser.
+
+### Changed (behaviour)
+
+- REST and the gateway default to API **v9**, the version the web client talks,
+  instead of v10 (the bot default). Pass `rest.version` / `ws.version` to go
+  back. The route table and types still come from `discord-api-types/v10`; the
+  differences between v9 and v10 for each endpoint were not audited.
+- `ws.properties` is merged per key with the defaults. Overriding one super
+  property (say `os`) keeps the rest, where before it replaced the whole object.
+  Replacing the identity wholesale is no longer possible through this option.
+- The default gateway `capabilities` is `1734653` (was `161789`), which leaves
+  channel obfuscation off.
+- The identify payload carries no `compress` key and its `client_state` holds
+  only `guild_versions`, as the web client sends them.
+- Default browser identity moved from Chrome `134` / build `384477` to Chrome
+  `153` / build `673764`.
+
+### Changed (breaking for code that read the defaults)
+
+- `DefaultSuperProperties` no longer contains `client_launch_id` and
+  `launch_signature`. They are per client now: each `Client` draws its own from
+  `createSuperProperties()`, so two clients in one process no longer share a
+  launch id. Code that spread `DefaultSuperProperties` to build `ws.properties`
+  should call `createSuperProperties()` instead.
+
+### Added
+
+- `sec-ch-ua`, `sec-ch-ua-mobile` and `sec-ch-ua-platform` headers, built from
+  the `User-Agent` that is sent. They are sent for desktop Chrome only; a
+  `browser_user_agent` for Firefox, Edge, Opera or a phone sends no hints. To
+  claim another browser, override `browser_user_agent`, `browser_version`, `os`
+  and `os_version` together.
+- Launch signature with the client-mod bits cleared, `device_model_name` and
+  `has_client_mods` in the super properties.
+- New exports from the defaults module: `createSuperProperties`,
+  `generateLaunchSignature`, `buildSecChUa`, `WebApiVersion`,
+  `DefaultChromeVersion`, `DefaultClientBuildNumber`, `ClientModBits`.
+  `buildSecChUa` throws a `RangeError` for a version that is not a number.
+
+### Fixed
+
+- Legacy `$`-prefixed super property keys (`$browser_user_agent`) now reach the
+  `User-Agent` header and the client hints, not only the gateway identify.
+- A non-numeric `browser_version` no longer crashes the client.
+
+### Known issue
+
+- `client.user.setPronouns()` sends `PATCH /users/@me`, which Discord answers
+  with an hCaptcha challenge. `PATCH /users/@me/profile` accepted the same
+  field in a manual probe. Not changed in this release; the smoke check for it
+  is marked `SKIP`.
+
+**Not proven:** run against one real account (`scripts/smoke/results.md`, run of
+2026-11-16): login, read-only, message, voice and group DM suites passed;
+the write suite passed except `setPronouns` (skipped) and the settings
+write-back, which Discord sends as a protobuf the fork does not decode. The
+`interaction` suite skipped `clickButton` and `selectMenu` because the test
+command replied without components. Capability bits 19 and 20 are not
+documented by Discord; they are set because the web client sets them.
+
 ## 0.4.1
 
 Rebased on discord.js `14.28.1` (upstream `e19a9bd35`). Git merged every file on
