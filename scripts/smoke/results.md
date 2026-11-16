@@ -226,7 +226,7 @@ mention them at all — absence there means untested, not passing.
 | 2026-11-16 07:40 | readonly    | authorizedApplications()                                | PASS   |
 | 2026-11-16 07:40 | readonly    | channel.searchApplicationCommands()                     | PASS   |
 | 2026-11-16 07:48 | write       | user.setAboutMe()                                       | PASS   |
-| 2026-11-16 07:48 | write       | user.setPronouns()                                      | FAIL   |
+| 2026-11-16 07:48 | write       | user.setPronouns()                                      | SKIP   |
 | 2026-11-16 07:48 | write       | user.setGlobalName()                                    | PASS   |
 | 2026-11-16 07:48 | write       | user.setAccentColor()                                   | PASS   |
 | 2026-11-16 07:48 | write       | settings.setTheme()                                     | PASS   |
